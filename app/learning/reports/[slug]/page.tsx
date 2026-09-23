@@ -30,11 +30,22 @@ const reports: ReportConfig[] = [
       "Kajian mengenai hutan komunitas dan tenurial masyarakat Mentawai.",
     htmlPath: "/learning-reports/mentawai-community-forest.html",
   },
+
+  {
+    slug: "pi-mel-smart-patrol-2026",
+    title: "Publikasi Hasil Pelatihan MEL dan SMART Patrol Mitra YPI 2026",
+    category: "Learning Publication",
+    description:
+      "Publikasi hasil pelatihan MEL dan SMART Patrol Mitra YPI 2026 dalam format web portrait.",
+    htmlPath: "/learning-reports/pi-mel-smart-patrol-2026.html",
+  },
 ];
 
 export default function LearningReportPage() {
   const params = useParams();
-  const slug = String(params?.slug || "");
+  const slug = Array.isArray(params?.slug)
+    ? params.slug[0]
+    : String(params?.slug || "");
 
   const report = reports.find((item) => item.slug === slug);
 
@@ -53,7 +64,7 @@ export default function LearningReportPage() {
           style={{
             maxWidth: "1200px",
             margin: "0 auto",
-            padding: "120px 24px 80px",
+            padding: "105px 24px 80px",
           }}
         >
           <Link
@@ -62,7 +73,7 @@ export default function LearningReportPage() {
               display: "inline-flex",
               alignItems: "center",
               gap: "8px",
-              marginBottom: "28px",
+              marginBottom: "32px",
               padding: "10px 16px",
               borderRadius: "999px",
               border: "1px solid rgba(0,75,92,0.18)",
@@ -91,8 +102,8 @@ export default function LearningReportPage() {
                 fontWeight: 700,
                 letterSpacing: "0.08em",
                 textTransform: "uppercase",
-                marginBottom: "12px",
                 color: "#730A2D",
+                marginBottom: "12px",
               }}
             >
               Learning report
@@ -144,7 +155,7 @@ export default function LearningReportPage() {
           padding: "105px 24px 40px",
         }}
       >
-        {/* BACK BUTTON */}
+        {/* BACK TO LEARNING */}
         <Link
           href="/learning"
           style={{
@@ -160,7 +171,6 @@ export default function LearningReportPage() {
             textDecoration: "none",
             fontSize: "13px",
             fontWeight: 700,
-            transition: "all 0.2s ease",
           }}
         >
           ← Back to Learning
@@ -210,7 +220,7 @@ export default function LearningReportPage() {
           </p>
         </div>
 
-        {/* REPORT FRAME */}
+        {/* HTML REPORT */}
         <div
           style={{
             width: "100%",
