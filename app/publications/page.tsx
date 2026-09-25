@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import TopNav from "@/app/components/TopNav";
 
@@ -15,6 +16,7 @@ type Publication = {
   topic: string;
   description: string;
   url: string;
+  detailUrl?: string;
   local?: boolean;
   featured?: boolean;
   image?: string;
@@ -88,6 +90,8 @@ const publications: Publication[] = [
       "Publikasi Tananua Flores mengenai gerakan konservasi berbasis komunitas di Flores.",
     url:
       "https://www.tananua.org/dari-desa-untuk-bumi-spiritualitas-ekologis-dan-gerakan-konservasi-berbasis-komunitas-di-flores-2/",
+    detailUrl:
+      "/publications/tananua-desa-untuk-bumi",
     image:
       "/learning-reports/tananua-desa-untuk-bumi.jpg",
   },
@@ -247,6 +251,7 @@ export default function PublicationsPage() {
         {/* ===================================================== */}
         {/* HEADER */}
         {/* ===================================================== */}
+
         <section>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#730A2D]">
             Knowledge Library
@@ -264,6 +269,7 @@ export default function PublicationsPage() {
         {/* ===================================================== */}
         {/* SOURCE */}
         {/* ===================================================== */}
+
         <section className="mt-8">
           <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-black/45">
             Source
@@ -292,6 +298,7 @@ export default function PublicationsPage() {
         {/* ===================================================== */}
         {/* SEARCH */}
         {/* ===================================================== */}
+
         <section className="mt-6">
           <input
             type="search"
@@ -307,6 +314,7 @@ export default function PublicationsPage() {
         {/* ===================================================== */}
         {/* FILTERS */}
         {/* ===================================================== */}
+
         <section className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           {/* Partner */}
           <select
@@ -347,9 +355,7 @@ export default function PublicationsPage() {
             className="rounded-xl border border-[#004B5C]/10 bg-white px-4 py-3 text-sm text-[#004B5C] outline-none"
           >
             {years.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
+              <option key={item}>{item}</option>
             ))}
           </select>
 
@@ -362,16 +368,15 @@ export default function PublicationsPage() {
             className="rounded-xl border border-[#004B5C]/10 bg-white px-4 py-3 text-sm text-[#004B5C] outline-none"
           >
             {topics.map((item) => (
-              <option key={item} value={item}>
-                {item}
-              </option>
+              <option key={item}>{item}</option>
             ))}
           </select>
         </section>
 
         {/* ===================================================== */}
-        {/* RESULT COUNT */}
+        {/* RESULT SUMMARY */}
         {/* ===================================================== */}
+
         <section className="mt-6 flex items-center justify-between gap-4">
           <p className="text-sm text-black/55">
             Showing{" "}
@@ -395,6 +400,7 @@ export default function PublicationsPage() {
         {/* ===================================================== */}
         {/* FEATURED */}
         {/* ===================================================== */}
+
         {featuredPublications.length > 0 && (
           <section className="mt-8">
             <div className="mb-4">
@@ -423,6 +429,7 @@ export default function PublicationsPage() {
         {/* ===================================================== */}
         {/* LATEST */}
         {/* ===================================================== */}
+
         <section className="mt-10 pb-16">
           <div className="mb-4">
             <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#730A2D]">
@@ -604,7 +611,11 @@ function PublicationLink({
 }: {
   publication: Publication;
 }) {
-  if (publication.local) {
+  /*
+   * YPI publication:
+   * stay inside the PI portal.
+   */
+  if (publication.source === "YPI") {
     return (
       <a
         href={publication.url}
@@ -615,14 +626,16 @@ function PublicationLink({
     );
   }
 
+  /*
+   * Partner publication:
+   * open internal PI publication detail page first.
+   */
   return (
-    <a
-      href={publication.url}
-      target="_blank"
-      rel="noopener noreferrer"
+    <Link
+      href={publication.detailUrl || publication.url}
       className="mt-5 inline-flex items-center gap-1.5 rounded-full bg-[#004B5C] px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-[#003D4A]"
     >
-      View Original ↗
-    </a>
+      View Publication
+    </Link>
   );
 }
