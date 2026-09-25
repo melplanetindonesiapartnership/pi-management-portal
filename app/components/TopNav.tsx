@@ -12,7 +12,8 @@ type Section =
   | "overview"
   | "sprints"
   | "monitoring"
-  | "learning";
+  | "learning"
+  | "portal-review";
 
 export default function TopNav() {
   const pathname = usePathname();
@@ -34,6 +35,9 @@ export default function TopNav() {
     useRef<HTMLButtonElement | null>(null);
 
   const learningRef =
+    useRef<HTMLButtonElement | null>(null);
+
+  const portalReviewRef =
     useRef<HTMLButtonElement | null>(null);
 
   const pillRef =
@@ -65,6 +69,10 @@ export default function TopNav() {
       target = learningRef.current;
     }
 
+    if (section === "portal-review") {
+      target = portalReviewRef.current;
+    }
+
     if (!target) {
       return;
     }
@@ -72,10 +80,14 @@ export default function TopNav() {
     const navRect = nav.getBoundingClientRect();
     const targetRect = target.getBoundingClientRect();
 
-    const left = targetRect.left - navRect.left;
+    const left =
+      targetRect.left - navRect.left;
 
-    pill.style.width = `${targetRect.width}px`;
-    pill.style.transform = `translateX(${left}px)`;
+    pill.style.width =
+      `${targetRect.width}px`;
+
+    pill.style.transform =
+      `translateX(${left}px)`;
   }
 
   /*
@@ -92,6 +104,11 @@ export default function TopNav() {
 
     if (pathname === "/monitoring") {
       setActiveSection("monitoring");
+      return;
+    }
+
+    if (pathname === "/partner-review") {
+      setActiveSection("portal-review");
       return;
     }
 
@@ -112,7 +129,8 @@ export default function TopNav() {
         activeWork.getBoundingClientRect().top +
         window.scrollY;
 
-      const trigger = activeWorkTop - 115;
+      const trigger =
+        activeWorkTop - 115;
 
       if (window.scrollY >= trigger) {
         setActiveSection("sprints");
@@ -177,7 +195,8 @@ export default function TopNav() {
         activeWork.getBoundingClientRect().top +
         window.scrollY;
 
-      const trigger = activeWorkTop - 115;
+      const trigger =
+        activeWorkTop - 115;
 
       const nextSection: Section =
         window.scrollY >= trigger
@@ -308,6 +327,14 @@ export default function TopNav() {
     router.push("/learning");
   }
 
+  /*
+   * Portal Review
+   */
+  function goToPortalReview() {
+    setActiveSection("portal-review");
+    router.push("/partner-review");
+  }
+
   return (
     <div className="sticky top-0 z-50 border-b border-white/10 bg-[#004B5C]">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-8">
@@ -403,6 +430,20 @@ export default function TopNav() {
             }`}
           >
             Learning
+          </button>
+
+          {/* Portal Review */}
+          <button
+            ref={portalReviewRef}
+            type="button"
+            onClick={goToPortalReview}
+            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
+              activeSection === "portal-review"
+                ? "text-white"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            Portal Review
           </button>
         </nav>
 
