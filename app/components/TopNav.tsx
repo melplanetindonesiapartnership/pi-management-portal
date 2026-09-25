@@ -12,7 +12,7 @@ type Section =
   | "overview"
   | "sprints"
   | "monitoring"
-  | "learning"
+  | "publications"
   | "portal-review";
 
 export default function TopNav() {
@@ -34,7 +34,7 @@ export default function TopNav() {
   const monitoringRef =
     useRef<HTMLButtonElement | null>(null);
 
-  const learningRef =
+  const publicationsRef =
     useRef<HTMLButtonElement | null>(null);
 
   const portalReviewRef =
@@ -65,8 +65,8 @@ export default function TopNav() {
       target = monitoringRef.current;
     }
 
-    if (section === "learning") {
-      target = learningRef.current;
+    if (section === "publications") {
+      target = publicationsRef.current;
     }
 
     if (section === "portal-review") {
@@ -77,8 +77,11 @@ export default function TopNav() {
       return;
     }
 
-    const navRect = nav.getBoundingClientRect();
-    const targetRect = target.getBoundingClientRect();
+    const navRect =
+      nav.getBoundingClientRect();
+
+    const targetRect =
+      target.getBoundingClientRect();
 
     const left =
       targetRect.left - navRect.left;
@@ -95,10 +98,10 @@ export default function TopNav() {
    */
   useEffect(() => {
     if (
-      pathname === "/learning" ||
-      pathname.startsWith("/learning/")
+      pathname === "/publications" ||
+      pathname.startsWith("/publications/")
     ) {
-      setActiveSection("learning");
+      setActiveSection("publications");
       return;
     }
 
@@ -262,9 +265,6 @@ export default function TopNav() {
   function goToSprints() {
     setActiveSection("sprints");
 
-    /*
-     * Already on homepage.
-     */
     if (pathname === "/") {
       const activeWork =
         document.getElementById("active-work");
@@ -286,9 +286,6 @@ export default function TopNav() {
       return;
     }
 
-    /*
-     * Navigate home first.
-     */
     router.push("/");
 
     setTimeout(() => {
@@ -320,11 +317,11 @@ export default function TopNav() {
   }
 
   /*
-   * Learning
+   * Publications
    */
-  function goToLearning() {
-    setActiveSection("learning");
-    router.push("/learning");
+  function goToPublications() {
+    setActiveSection("publications");
+    router.push("/publications");
   }
 
   /*
@@ -418,18 +415,18 @@ export default function TopNav() {
             Performance
           </span>
 
-          {/* Learning */}
+          {/* Publications */}
           <button
-            ref={learningRef}
+            ref={publicationsRef}
             type="button"
-            onClick={goToLearning}
+            onClick={goToPublications}
             className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
-              activeSection === "learning"
+              activeSection === "publications"
                 ? "text-white"
                 : "text-white/60 hover:text-white"
             }`}
           >
-            Learning
+            Publications
           </button>
 
           {/* Portal Review */}
