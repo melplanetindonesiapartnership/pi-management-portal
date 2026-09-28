@@ -12,6 +12,7 @@ type Section =
   | "overview"
   | "sprints"
   | "monitoring"
+  | "partners"
   | "publications"
   | "portal-review";
 
@@ -32,6 +33,9 @@ export default function TopNav() {
     useRef<HTMLButtonElement | null>(null);
 
   const monitoringRef =
+    useRef<HTMLButtonElement | null>(null);
+
+  const partnersRef =
     useRef<HTMLButtonElement | null>(null);
 
   const publicationsRef =
@@ -63,6 +67,10 @@ export default function TopNav() {
 
     if (section === "monitoring") {
       target = monitoringRef.current;
+    }
+
+    if (section === "partners") {
+      target = partnersRef.current;
     }
 
     if (section === "publications") {
@@ -102,6 +110,11 @@ export default function TopNav() {
       pathname.startsWith("/publications/")
     ) {
       setActiveSection("publications");
+      return;
+    }
+
+    if (pathname === "/partners") {
+      setActiveSection("partners");
       return;
     }
 
@@ -317,6 +330,14 @@ export default function TopNav() {
   }
 
   /*
+   * Partners
+   */
+  function goToPartners() {
+    setActiveSection("partners");
+    router.push("/partners");
+  }
+
+  /*
    * Publications
    */
   function goToPublications() {
@@ -406,9 +427,18 @@ export default function TopNav() {
           </span>
 
           {/* Partners */}
-          <span className="relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold text-white/30">
+          <button
+            ref={partnersRef}
+            type="button"
+            onClick={goToPartners}
+            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
+              activeSection === "partners"
+                ? "text-white"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
             Partners
-          </span>
+          </button>
 
           {/* Performance */}
           <span className="relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold text-white/30">
