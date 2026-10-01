@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -68,7 +68,7 @@ export default function LearningReportPage() {
           }}
         >
           <Link
-            href="/learning"
+            href="/publications"
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -84,7 +84,7 @@ export default function LearningReportPage() {
               fontWeight: 700,
             }}
           >
-            â† Back to Learning
+            {"\u2190"} Back to Publications
           </Link>
 
           <div
@@ -155,9 +155,9 @@ export default function LearningReportPage() {
           padding: "105px 24px 40px",
         }}
       >
-        {/* BACK TO LEARNING */}
+            {"\u2190"} Back to Publications
         <Link
-          href="/learning"
+          href="/publications"
           style={{
             display: "inline-flex",
             alignItems: "center",
@@ -173,7 +173,7 @@ export default function LearningReportPage() {
             fontWeight: 700,
           }}
         >
-          â† Back to Learning
+            {"\u2190"} Back to Publications
         </Link>
 
         {/* REPORT HEADER */}
@@ -248,3 +248,5 @@ export default function LearningReportPage() {
     </main>
   );
 }
+
+
