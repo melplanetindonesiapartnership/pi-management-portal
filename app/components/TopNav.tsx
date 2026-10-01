@@ -14,6 +14,7 @@ type Section =
   | "monitoring"
   | "partners"
   | "publications"
+  | "directory"
   | "portal-review";
 
 export default function TopNav() {
@@ -39,6 +40,9 @@ export default function TopNav() {
     useRef<HTMLButtonElement | null>(null);
 
   const publicationsRef =
+    useRef<HTMLButtonElement | null>(null);
+
+  const directoryRef =
     useRef<HTMLButtonElement | null>(null);
 
   const portalReviewRef =
@@ -77,6 +81,10 @@ export default function TopNav() {
       target = publicationsRef.current;
     }
 
+    if (section === "directory") {
+      target = directoryRef.current;
+    }
+
     if (section === "portal-review") {
       target = portalReviewRef.current;
     }
@@ -113,6 +121,11 @@ export default function TopNav() {
       return;
     }
 
+    if (pathname === "/directory") {
+      setActiveSection("directory");
+      return;
+    }
+
     if (pathname === "/partners") {
       setActiveSection("partners");
       return;
@@ -123,7 +136,10 @@ export default function TopNav() {
       return;
     }
 
-    if (pathname === "/partner-review") {
+    if (
+      pathname === "/partner-review" ||
+      pathname.startsWith("/partner-review/")
+    ) {
       setActiveSection("portal-review");
       return;
     }
@@ -346,6 +362,14 @@ export default function TopNav() {
   }
 
   /*
+   * Directory
+   */
+  function goToDirectory() {
+    setActiveSection("directory");
+    router.push("/directory");
+  }
+
+  /*
    * Portal Review
    */
   function goToPortalReview() {
@@ -457,6 +481,20 @@ export default function TopNav() {
             }`}
           >
             Publications
+          </button>
+
+          {/* Directory */}
+          <button
+            ref={directoryRef}
+            type="button"
+            onClick={goToDirectory}
+            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
+              activeSection === "directory"
+                ? "text-white"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            Directory
           </button>
 
           {/* Portal Review */}
