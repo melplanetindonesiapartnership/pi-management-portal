@@ -67,25 +67,7 @@ export default function LearningReportPage() {
             padding: "105px 24px 80px",
           }}
         >
-          <Link
-            href="/publications"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              marginBottom: "32px",
-              padding: "10px 16px",
-              borderRadius: "999px",
-              border: "1px solid rgba(0,75,92,0.18)",
-              background: "#FFFFFF",
-              color: "#004B5C",
-              textDecoration: "none",
-              fontSize: "13px",
-              fontWeight: 700,
-            }}
-          >
-            {"\u2190"} Back to Publications
-          </Link>
+          
 
           <div
             style={{
@@ -155,7 +137,6 @@ export default function LearningReportPage() {
           padding: "105px 24px 40px",
         }}
       >
-            {"\u2190"} Back to Publications
         <Link
           href="/publications"
           style={{
@@ -173,7 +154,7 @@ export default function LearningReportPage() {
             fontWeight: 700,
           }}
         >
-            {"\u2190"} Back to Publications
+          {"\u2190"} Back to Publications
         </Link>
 
         {/* REPORT HEADER */}
