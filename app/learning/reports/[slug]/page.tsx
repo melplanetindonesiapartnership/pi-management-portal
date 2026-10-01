@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -84,7 +84,7 @@ export default function LearningReportPage() {
               fontWeight: 700,
             }}
           >
-            ← Back to Learning
+            â† Back to Learning
           </Link>
 
           <div
@@ -173,7 +173,7 @@ export default function LearningReportPage() {
             fontWeight: 700,
           }}
         >
-          ← Back to Learning
+          â† Back to Learning
         </Link>
 
         {/* REPORT HEADER */}
