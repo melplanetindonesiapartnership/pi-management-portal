@@ -441,16 +441,25 @@ export default function Home() {
     }, [tasks]);
 
   /*
-   * Completed
-   */
-  const completedActiveTasks =
-    useMemo(() => {
-      return activeWork.filter(
-        (task) =>
-          task.status ===
-          "Done"
-      );
-    }, [activeWork]);
+ * Completed tasks in Active Sprint
+ */
+const completedActiveTasks = useMemo(() => {
+  return activeWork.filter(
+    (task) => task.status === "Done"
+  );
+}, [activeWork]);
+
+/*
+ * Completed and archived tasks across all Notion views
+ */
+const completedTasks = useMemo(() => {
+  return tasks.filter(
+    (task) =>
+      task.status === "Done" ||
+      (task.sprint === "Archive" &&
+        task.status !== "Cancelled")
+  );
+}, [tasks]);
 
   /*
    * Attention
@@ -1047,17 +1056,22 @@ export default function Home() {
               detail="Current sprint"
             />
 
-            <MetricCard
-              label="Completed"
-              value={
-                loading
-                  ? "…"
-                  : String(
-                      completedActiveTasks.length
-                    )
-              }
-              detail="Tasks marked Done"
-            />
+           <MetricCard
+  label="Completed"
+  value={
+    loading
+      ? "…"
+      : String(completedTasks.length)
+  }
+  detail="View completed & archived tasks ↓"
+  onClick={() => {
+    const archivePanel = document.getElementById("completed-tasks");
+    archivePanel?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
+  }}
+/>
 
             <MetricCard
               label="Attention"
@@ -1109,40 +1123,17 @@ export default function Home() {
           />
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
-            <ChangeCard
-              symbol="↑"
-              title="Progress updates"
-              text={
-                activeWork.length ===
-                0
-                  ? "No active sprint data available."
-                  : `${
-                      activeWork.filter(
-                        (
-                          task
-                        ) =>
-                          normalizedProgress(
-                            task.progress
-                          ) !== null
-                      ).length
-                    } active tasks currently have tracked progress.`
-              }
-            />
-
-            <ChangeCard
-              symbol="✓"
-              title="Completed work"
-              text={
-                completedActiveTasks.length ===
-                0
-                  ? "No active sprint task is currently marked Done."
-                  : completedActiveTasks.length ===
-                    1
-                  ? "1 active sprint task is currently marked Done."
-                  : `${completedActiveTasks.length} active sprint tasks are currently marked Done.`
-              }
-            />
-
+  <ChangeCard
+  symbol="✓"
+  title="Completed work"
+  text={
+    completedTasks.length === 0
+      ? "No completed or archived tasks found."
+      : completedTasks.length === 1
+        ? "1 completed or archived task found."
+        : `${completedTasks.length} completed or archived tasks found.`
+  }
+/>
             <ChangeCard
               symbol="!"
               title="New attention"
@@ -1496,7 +1487,7 @@ export default function Home() {
         {/* =========================
             SPRINT OVERVIEW
         ========================== */}
-        <section className="mt-8 grid gap-4 lg:grid-cols-3">
+        <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <InfoPanel
             eyebrow="Sprint overview"
             title="Current state"
@@ -1661,6 +1652,81 @@ export default function Home() {
                 planned for Next
                 Sprint.
               </p>
+            )}
+          </InfoPanel>
+
+        </section>
+
+        {/* =========================
+            COMPLETED & ARCHIVE
+        ========================== */}
+        <section id="completed-tasks" className="mt-4 scroll-mt-24">
+          <InfoPanel
+            eyebrow="Task history"
+            title={`Completed & Archive (${completedTasks.length})`}
+          >
+            <p className="mb-4 text-sm leading-6 text-black/55">
+              Main tasks marked Done or placed in Archive in Notion.
+            </p>
+
+            {loading ? (
+              <div className="rounded-xl bg-[#F7F0EC] p-4 text-sm text-black/50">
+                Loading completed and archived tasks...
+              </div>
+            ) : completedTasks.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-[#004B5C]/15 bg-[#F7F0EC] p-4">
+                <p className="text-sm font-medium text-[#004B5C]">
+                  No completed or archived main tasks found.
+                </p>
+              </div>
+            ) : (
+              <div className="max-h-[460px] overflow-y-auto pr-1">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {completedTasks.map((task) => (
+                    <article
+                      key={task.id}
+                      className="rounded-xl border border-[#004B5C]/10 bg-[#F7F0EC]/70 p-4"
+                    >
+                      <h4 className="text-sm font-semibold leading-5 text-[#004B5C]">
+                        {task.name}
+                      </h4>
+
+                      <div className="mt-3 flex flex-wrap gap-1.5">
+                        <span
+                          className={`rounded-full px-2 py-1 text-[11px] font-semibold ${
+                            statusTone[task.status] ?? "bg-black/5 text-black/55"
+                          }`}
+                        >
+                          {task.status}
+                        </span>
+
+                        {task.sprint ? (
+                          <span className="rounded-full bg-white px-2 py-1 text-[11px] font-medium text-black/55">
+                            {task.sprint}
+                          </span>
+                        ) : null}
+
+                        {task.priority ? (
+                          <span
+                            className={`rounded-full px-2 py-1 text-[11px] font-medium ${
+                              priorityTone[task.priority] ?? "bg-black/5 text-black/55"
+                            }`}
+                          >
+                            {task.priority}
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <p className="mt-3 text-xs leading-5 text-black/55">
+                        PIC: {task.assignedTo.length > 0 ? task.assignedTo.join(", ") : "Not assigned"}
+                      </p>
+                      <p className="text-xs leading-5 text-black/45">
+                        Due: {formatDate(task.dueDate)}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </div>
             )}
           </InfoPanel>
         </section>
@@ -2092,13 +2158,15 @@ function MetricCard({
   label,
   value,
   detail,
+  onClick,
 }: {
   label: string;
   value: string;
   detail: string;
+  onClick?: () => void;
 }) {
-  return (
-    <div className="rounded-2xl border border-[#004B5C]/10 bg-white p-5 shadow-sm">
+  const cardContent = (
+    <>
       <p className="text-xs font-semibold uppercase tracking-[0.12em] text-black/40">
         {label}
       </p>
@@ -2110,6 +2178,27 @@ function MetricCard({
       <p className="mt-2 text-xs leading-5 text-black/50">
         {detail}
       </p>
+    </>
+  );
+
+  const cardStyle =
+    "rounded-2xl border border-[#004B5C]/10 bg-white p-5 shadow-sm";
+
+  if (onClick) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className={`${cardStyle} w-full cursor-pointer text-left font-[inherit] transition hover:border-[#004B5C]/30 hover:shadow-md focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#004B5C]`}
+      >
+        {cardContent}
+      </button>
+    );
+  }
+
+  return (
+    <div className={cardStyle}>
+      {cardContent}
     </div>
   );
 }
