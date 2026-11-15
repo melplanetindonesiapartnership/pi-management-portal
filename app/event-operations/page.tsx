@@ -1,9 +1,8 @@
 import TopNav from "../components/TopNav";
 
-// shortcut: /dev only works for editors of the Apps Script; replace with the /exec deployment URL so every viewer can see it.
-// The Apps Script doGet must also call .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL) or the iframe stays blank.
+// Apps Script /exec deployment. Its doGet must call .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL) or the iframe stays blank.
 const EVENT_OPERATIONS_URL =
-  "https://script.google.com/a/macros/planetindonesia.org/s/AKfycbywJjMZuJ_jSswApR1NzC_yH6zSw3ESmjNS5lC4Zllj/dev";
+  "https://script.google.com/a/macros/planetindonesia.org/s/AKfycbyfSIcl3kXjULsd8SBK_WEB3zuDU01gn03C7lJcAE5yrc0i7xMYeX7J4mj6cj6SBzB_7Q/exec";
 
 export default function EventOperationsPage() {
   return (
