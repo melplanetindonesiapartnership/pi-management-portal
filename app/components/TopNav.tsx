@@ -6,6 +6,7 @@ import {
   useRef,
   useState,
 } from "react";
+import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
 
 type Section =
@@ -358,14 +359,24 @@ export default function TopNav() {
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-6 py-3 lg:px-8">
 
         {/* Brand */}
-        <div className="hidden shrink-0 md:block">
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
-            Planet Indonesia
-          </p>
+        <div className="hidden shrink-0 items-center gap-2 md:flex">
+          <Image
+            src="/pi-logo-white.png"
+            alt="Yayasan Planet Indonesia"
+            width={44}
+            height={44}
+            priority
+          />
 
-          <p className="mt-0.5 text-xs text-white/45">
-            Management Portal
-          </p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/70">
+              Planet Indonesia
+            </p>
+
+            <p className="mt-0.5 text-xs text-white/45">
+              Management Portal
+            </p>
+          </div>
         </div>
 
         {/* Navigation */}

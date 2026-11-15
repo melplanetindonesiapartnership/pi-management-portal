@@ -1,26 +1,46 @@
 @import "tailwindcss";
 
+/* PI brand palette (pi-brand-guardian): Off-White background, black text. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #F7F0EC;
+  --foreground: #000000;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-instrument-sans), "Open Sans", Arial, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+}
+
+/* PI brand pattern 04 as a single vertical band on the right edge of teal headers. */
+.pi-pattern-band {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.pi-pattern-band::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 64px;
+  background: url("/patterns/pi-band-white-04.png") top center / 100% auto repeat-y;
+  opacity: 0.18;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* Keep header text clear of the band until the max-w-7xl container (1280px) + band fit side by side. */
+@media (max-width: 1407px) {
+  .pi-pattern-band > div {
+    padding-right: calc(64px + 1.5rem);
+  }
 }

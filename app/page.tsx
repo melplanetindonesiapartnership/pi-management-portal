@@ -1275,7 +1275,7 @@ const monthOptions = [
       {/* =========================
           HEADER
       ========================== */}
-      <header className="border-b border-[#004B5C]/10 bg-[#004B5C] text-white">
+      <header className="pi-pattern-band border-b border-[#004B5C]/10 bg-[#004B5C] text-white">
         <div className="mx-auto max-w-7xl px-6 py-7 lg:px-8">
           <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>

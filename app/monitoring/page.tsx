@@ -17,7 +17,7 @@ export default function MonitoringPage() {
       {/* =========================================================
           HEADER
          ========================================================= */}
-      <header className="border-b border-[#004B5C]/10 bg-[#004B5C] text-white">
+      <header className="pi-pattern-band border-b border-[#004B5C]/10 bg-[#004B5C] text-white">
         <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-white/65">
             Planet Indonesia
