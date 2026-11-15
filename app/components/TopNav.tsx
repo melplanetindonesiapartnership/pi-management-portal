@@ -16,6 +16,7 @@ type Section =
   | "partners"
   | "publications"
   | "directory"
+  | "event-operations"
   | "portal-review";
 
 function sectionForPath(pathname: string): Section {
@@ -36,6 +37,10 @@ function sectionForPath(pathname: string): Section {
 
   if (pathname === "/monitoring") {
     return "monitoring";
+  }
+
+  if (pathname === "/event-operations") {
+    return "event-operations";
   }
 
   if (
@@ -76,6 +81,9 @@ export default function TopNav() {
   const directoryRef =
     useRef<HTMLButtonElement | null>(null);
 
+  const eventOperationsRef =
+    useRef<HTMLButtonElement | null>(null);
+
   const portalReviewRef =
     useRef<HTMLButtonElement | null>(null);
 
@@ -114,6 +122,10 @@ export default function TopNav() {
 
     if (section === "directory") {
       target = directoryRef.current;
+    }
+
+    if (section === "event-operations") {
+      target = eventOperationsRef.current;
     }
 
     if (section === "portal-review") {
@@ -347,6 +359,14 @@ export default function TopNav() {
   }
 
   /*
+   * Event Operations
+   */
+  function goToEventOperations() {
+    setActiveSection("event-operations");
+    router.push("/event-operations");
+  }
+
+  /*
    * Portal Review
    */
   function goToPortalReview() {
@@ -482,6 +502,20 @@ export default function TopNav() {
             }`}
           >
             Directory
+          </button>
+
+          {/* Event Operations */}
+          <button
+            ref={eventOperationsRef}
+            type="button"
+            onClick={goToEventOperations}
+            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
+              activeSection === "event-operations"
+                ? "text-white"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
+            Event Operations
           </button>
 
           {/* Portal Review */}
