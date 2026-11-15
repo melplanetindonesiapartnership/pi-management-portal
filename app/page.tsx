@@ -13,6 +13,7 @@ type Task = {
   name: string;
   description: string;
   assignedTo: string[];
+  subtaskAssignedTo: string[];
   status: string;
   progress: number | null;
   priority: string | null;
@@ -184,6 +185,61 @@ function dateValue(
   return new Date(
     `${dateString}T00:00:00`
   ).getTime();
+}
+
+/*
+ * Check whether a task overlaps the selected year/month
+ */
+function taskOverlapsPeriod(
+  task: Task,
+  yearFilter: string,
+  monthFilter: string
+): boolean { 
+  if (yearFilter === "All Time") {
+  return true;
+}
+ if (
+  !isValidDate(task.startDate) ||
+  !isValidDate(task.dueDate)
+) {
+  return true;
+}
+
+  const year = Number(yearFilter);
+
+  if (!Number.isInteger(year)) {
+    return false;
+  }
+
+  const startDate = dateValue(task.startDate!);
+  const dueDate = dateValue(task.dueDate!);
+
+  if (startDate > dueDate) {
+    return false;
+  }
+
+  const periodStart =
+    monthFilter === "All Months"
+      ? new Date(year, 0, 1).getTime()
+      : new Date(
+          year,
+          Number(monthFilter) - 1,
+          1
+        ).getTime();
+
+  const periodEndExclusive =
+    monthFilter === "All Months"
+      ? new Date(year + 1, 0, 1).getTime()
+      : new Date(
+          year,
+          Number(monthFilter),
+          1
+        ).getTime();
+
+  return (
+    startDate < periodEndExclusive &&
+    dueDate >= periodStart
+  );
 }
 
 function startHasPassed(
@@ -369,6 +425,97 @@ function monthLabel(
     }
   ).format(date);
 }
+type NavigationItem = {
+  id: string;
+  label: string;
+};
+
+type NavigationGroup = {
+  label: string;
+  items: NavigationItem[];
+};
+
+const navigationGroups: NavigationGroup[] = [
+  {
+    label: "Overview",
+    items: [
+      {
+        id: "overview",
+        label: "Sprint Snapshot",
+      },
+    ],
+  },
+  {
+    label: "Management",
+    items: [
+      {
+        id: "management-summary",
+        label: "Management Summary",
+      },
+      {
+        id: "what-changed",
+        label: "What Changed",
+      },
+      {
+        id: "attention-required",
+        label: "What Needs Attention",
+      },
+    ],
+  },
+  {
+    label: "Work Management",
+    items: [
+      {
+        id: "active-work",
+        label: "Active Work",
+      },
+    ],
+  },
+  {
+    label: "Sprint Overview",
+    items: [
+      {
+        id: "current-state",
+        label: "Current State",
+      },
+      {
+        id: "by-priority",
+        label: "By Priority",
+      },
+      {
+        id: "next-sprint",
+        label: "Next Sprint",
+      },
+    ],
+  },
+  {
+    label: "Work History",
+    items: [
+      {
+        id: "completed-tasks",
+        label: "Completed & Archive",
+      },
+      {
+        id: "backlog",
+        label: "Backlog",
+      },
+    ],
+  },
+  {
+    label: "Monitoring",
+    items: [
+      {
+        id: "monitoring-timeline",
+        label: "Monitoring Timeline",
+      },
+    ],
+  },
+];
+
+const navigationItems: NavigationItem[] =
+  navigationGroups.flatMap(
+    (group) => group.items
+  );
 
 export default function Home() {
   const [tasks, setTasks] =
@@ -382,6 +529,9 @@ export default function Home() {
 
   const [lastSynced, setLastSynced] =
     useState<Date | null>(null);
+
+  const [activeSection, setActiveSection] =
+    useState<string>("overview");
 
   /* Search / Filters */
   const [searchQuery, setSearchQuery] =
@@ -399,46 +549,81 @@ export default function Home() {
     priorityFilter,
     setPriorityFilter,
   ] = useState("All Priority");
+  
+  /* Year & Month Filters */
+const [yearFilter, setYearFilter] = useState(
+  String(new Date().getFullYear())
+);
 
+const [monthFilter, setMonthFilter] = useState(
+  "All Months"
+);
   /*
-   * Active Sprint
-   */
-  const activeWork = useMemo(() => {
-    return tasks.filter(
-      (task) =>
-        task.sprint ===
-          "Active Sprint" &&
-        task.status !==
-          "Cancelled"
-    );
-  }, [tasks]);
+ * Global PIC Filter
+ */
+const picFilteredTasks = useMemo(() => {
+  if (picFilter === "All PIC") {
+    return tasks;
+  }
 
-  /*
-   * Next Sprint
-   */
-  const nextSprint = useMemo(() => {
-    return tasks.filter(
-      (task) =>
-        task.sprint ===
-          "Next Sprint" &&
-        task.status !==
-          "Cancelled"
-    );
-  }, [tasks]);
+  return tasks.filter(
+    (task) =>
+      task.assignedTo.includes(picFilter) ||
+      task.subtaskAssignedTo.includes(picFilter)
+  );
+}, [tasks, picFilter]);
+  
+/*
+ * Global Period Filter
+ */
+const periodFilteredTasks = useMemo(() => {
+  return picFilteredTasks.filter((task) =>
+    taskOverlapsPeriod(
+      task,
+      yearFilter,
+      monthFilter
+    )
+  );
+}, [
+  picFilteredTasks,
+  yearFilter,
+  monthFilter,
+]);
 
-  /*
-   * Tasks without sprint
-   */
-  const outsideSprint =
-    useMemo(() => {
-      return tasks.filter(
-        (task) =>
-          (!task.sprint ||
-            task.sprint === "") &&
-          task.status !==
-            "Cancelled"
-      );
-    }, [tasks]);
+/*
+ * Active Sprint
+ */
+
+const activeWork = useMemo(() => {
+  return periodFilteredTasks.filter(
+    (task) =>
+      task.sprint === "Active Sprint" &&
+      task.status !== "Cancelled"
+  );
+}, [periodFilteredTasks]);
+
+  
+ /*
+ * Next Sprint
+ */
+const nextSprint = useMemo(() => {
+  return periodFilteredTasks.filter(
+    (task) =>
+      task.sprint === "Next Sprint" &&
+      task.status !== "Cancelled"
+  );
+}, [periodFilteredTasks]);
+
+/*
+ * Tasks without sprint
+ */
+const outsideSprint = useMemo(() => {
+  return periodFilteredTasks.filter(
+    (task) =>
+      (!task.sprint || task.sprint === "") &&
+      task.status !== "Cancelled"
+  );
+}, [periodFilteredTasks]);
 
   /*
  * Completed tasks in Active Sprint
@@ -450,96 +635,153 @@ const completedActiveTasks = useMemo(() => {
 }, [activeWork]);
 
 /*
- * Completed and archived tasks across all Notion views
+ * Completed and archived tasks
  */
 const completedTasks = useMemo(() => {
-  return tasks.filter(
+  return periodFilteredTasks.filter(
     (task) =>
       task.status === "Done" ||
-      (task.sprint === "Archive" &&
-        task.status !== "Cancelled")
+      (
+        task.sprint === "Archive" &&
+        task.status !== "Cancelled"
+      )
+  );
+}, [periodFilteredTasks]);
+
+ /*
+ * Attention
+ */
+const attentionItems = useMemo(() => {
+  return activeWork.filter((task) => {
+    const matchesPic =
+      picFilter === "All PIC" ||
+      task.assignedTo.includes(picFilter) ||
+      task.subtaskAssignedTo.includes(picFilter);
+
+    return (
+      matchesPic &&
+      attentionReason(task) !== null
+    );
+  });
+}, [activeWork, picFilter]);
+
+/*
+ * Progress
+ */
+const trackedProgress = useMemo(() => {
+  const values = activeWork
+    .filter(
+      (task) =>
+        picFilter === "All PIC" ||
+        task.assignedTo.includes(picFilter) ||
+        task.subtaskAssignedTo.includes(picFilter)
+    )
+    .map((task) =>
+      normalizedProgress(task.progress)
+    )
+    .filter(
+      (value): value is number =>
+        value !== null
+    );
+
+  if (values.length === 0) {
+    return null;
+  }
+
+  const total = values.reduce(
+    (sum, value) => sum + value,
+    0
+  );
+
+  return total / values.length;
+}, [activeWork, picFilter]);
+  /*
+   * Filter options
+   */
+  const picOptions = useMemo(() => {
+  const values = new Set<string>();
+
+  tasks.forEach((task) => {
+    if (task.status === "Cancelled") {
+      return;
+    }
+
+    [
+      ...task.assignedTo,
+      ...task.subtaskAssignedTo,
+    ].forEach((person) => {
+      const name = person.trim();
+
+      if (name) {
+        values.add(name);
+      }
+    });
+  });
+
+  return Array.from(values).sort((a, b) =>
+    a.localeCompare(b)
   );
 }, [tasks]);
 
   /*
-   * Attention
-   */
-  const attentionItems =
-    useMemo(() => {
-      return activeWork.filter(
-        (task) =>
-          attentionReason(
-            task
-          ) !== null
-      );
-    }, [activeWork]);
+ * Available years from task date ranges
+ */
+const yearOptions = useMemo(() => {
+  const years = new Set<number>([
+    new Date().getFullYear(),
+  ]);
 
+  tasks.forEach((task) => {
+    if (
+      !isValidDate(task.startDate) ||
+      !isValidDate(task.dueDate)
+    ) {
+      return;
+    }
+
+    const startYear = new Date(
+      `${task.startDate}T00:00:00`
+    ).getFullYear();
+
+    const dueYear = new Date(
+      `${task.dueDate}T00:00:00`
+    ).getFullYear();
+
+    if (startYear > dueYear) {
+      return;
+    }
+
+    for (
+      let year = startYear;
+      year <= dueYear;
+      year++
+    ) {
+      years.add(year);
+    }
+  });
+
+  return Array.from(years)
+    .sort((a, b) => b - a)
+    .map(String);
+}, [tasks]);
+  
   /*
-   * Progress
-   */
-  const trackedProgress =
-    useMemo(() => {
-      const values =
-        activeWork
-          .map((task) =>
-            normalizedProgress(
-              task.progress
-            )
-          )
-          .filter(
-            (
-              value
-            ): value is number =>
-              value !== null
-          );
-
-      if (
-        values.length === 0
-      ) {
-        return null;
-      }
-
-      const total =
-        values.reduce(
-          (sum, value) =>
-            sum + value,
-          0
-        );
-
-      return (
-        total /
-        values.length
-      );
-    }, [activeWork]);
-
-  /*
-   * Filter options
-   */
-  const picOptions =
-    useMemo(() => {
-      const values =
-        new Set<string>();
-
-      activeWork.forEach(
-        (task) => {
-          task.assignedTo.forEach(
-            (person) => {
-              if (person) {
-                values.add(
-                  person
-                );
-              }
-            }
-          );
-        }
-      );
-
-      return Array.from(
-        values
-      ).sort((a, b) =>
-        a.localeCompare(b)
-      );
-    }, [activeWork]);
+ * Available months
+ */
+const monthOptions = [
+  { value: "01", label: "January" },
+  { value: "02", label: "February" },
+  { value: "03", label: "March" },
+  { value: "04", label: "April" },
+  { value: "05", label: "May" },
+  { value: "06", label: "June" },
+  { value: "07", label: "July" },
+  { value: "08", label: "August" },
+  { value: "09", label: "September" },
+  { value: "10", label: "October" },
+  { value: "11", label: "November" },
+  { value: "12", label: "December" },
+];
 
   const statusOptions =
     useMemo(() => {
@@ -602,6 +844,7 @@ const completedTasks = useMemo(() => {
               task.name,
               task.description,
               ...task.assignedTo,
+              ...task.subtaskAssignedTo,
               task.status,
               task.priority ??
                 "",
@@ -618,11 +861,9 @@ const completedTasks = useMemo(() => {
             );
 
           const matchesPic =
-            picFilter ===
-              "All PIC" ||
-            task.assignedTo.includes(
-              picFilter
-            );
+  picFilter === "All PIC" ||
+  task.assignedTo.includes(picFilter) ||
+  task.subtaskAssignedTo.includes(picFilter);
 
           const matchesStatus =
             statusFilter ===
@@ -944,18 +1185,88 @@ const completedTasks = useMemo(() => {
     };
   }, []);
 
-  function clearFilters() {
-    setSearchQuery("");
-    setPicFilter(
-      "All PIC"
-    );
-    setStatusFilter(
-      "All Status"
-    );
-    setPriorityFilter(
-      "All Priority"
-    );
+ function clearFilters() {
+  setSearchQuery("");
+
+  setPicFilter("All PIC");
+
+  setYearFilter(
+    String(new Date().getFullYear())
+  );
+
+  setMonthFilter("All Months");
+
+  setStatusFilter("All Status");
+
+  setPriorityFilter("All Priority");
+}
+
+  function scrollToSection(id: string) {
+    const element = document.getElementById(id);
+
+    if (!element) {
+      return;
+    }
+
+    setActiveSection(id);
+    element.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }
+
+  useEffect(() => {
+    function updateActiveSection() {
+      const activationLine =
+        window.scrollY + 150;
+
+      let currentSection =
+        navigationItems[0]?.id ?? "overview";
+
+      navigationItems.forEach((item) => {
+        const element = document.getElementById(
+          item.id
+        );
+
+        if (!element) {
+          return;
+        }
+
+        const elementTop =
+          element.getBoundingClientRect().top +
+          window.scrollY;
+
+        if (elementTop <= activationLine) {
+          currentSection = item.id;
+        }
+      });
+
+      setActiveSection(currentSection);
+    }
+
+    updateActiveSection();
+
+    window.addEventListener(
+      "scroll",
+      updateActiveSection,
+      { passive: true }
+    );
+    window.addEventListener(
+      "resize",
+      updateActiveSection
+    );
+
+    return () => {
+      window.removeEventListener(
+        "scroll",
+        updateActiveSection
+      );
+      window.removeEventListener(
+        "resize",
+        updateActiveSection
+      );
+    };
+  }, []);
 
   return (
     <main className="min-h-screen bg-[#F7F0EC] text-black">
@@ -1008,10 +1319,261 @@ const completedTasks = useMemo(() => {
       </header>
 
       <div className="mx-auto max-w-7xl px-6 py-8 lg:px-8">
+
+  {/* OVERVIEW LAYOUT */}
+<div
+  className="grid items-stretch gap-8"
+  style={{
+    gridTemplateColumns: "230px minmax(0, 1fr)",
+  }}
+>
+    {/* LEFT SIDEBAR */}
+   <aside className="block self-stretch">
+      <div className="sticky top-4 z-40 max-h-[calc(100vh-2rem)] overflow-y-auto overscroll-contain rounded-2xl border border-[#004B5C]/10 bg-white p-5 shadow-sm">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#730A2D]">
+          Overview
+        </p>
+
+        <h2 className="mt-2 text-lg font-semibold text-[#004B5C]">
+          Management Navigation
+        </h2>
+
+        {/* QUICK NAVIGATION */}
+        <nav
+          aria-label="Overview navigation"
+          className="mt-6 border-t border-[#004B5C]/10 pt-5"
+        >
+          {navigationGroups.map((group) => (
+            <div key={group.label} className="mb-5 last:mb-0">
+              <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-black/40">
+                {group.label}
+              </p>
+
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive =
+                    activeSection === item.id;
+
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      aria-current={
+                        isActive ? "location" : undefined
+                      }
+                      onClick={() =>
+                        scrollToSection(item.id)
+                      }
+                      className={`w-full rounded-lg px-3 py-2 text-left text-sm transition ${
+                        isActive
+                          ? "bg-[#004B5C] font-semibold text-white shadow-sm"
+                          : "text-[#004B5C]/70 hover:bg-[#F7F0EC] hover:text-[#004B5C]"
+                      }`}
+                    >
+                      {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* GLOBAL FILTERS */}
+        <div className="mt-6 border-t border-[#004B5C]/10 pt-5">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#730A2D]">
+              Global Filters
+            </p>
+
+            {(picFilter !== "All PIC" ||
+              yearFilter !== String(new Date().getFullYear()) ||
+              monthFilter !== "All Months" ||
+              searchQuery ||
+              statusFilter !== "All Status" ||
+              priorityFilter !== "All Priority") && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="text-xs font-medium text-[#730A2D] hover:underline"
+              >
+                Reset
+              </button>
+            )}
+          </div>
+
+          {/* PIC */}
+          <label className="mt-4 block">
+            <span className="text-sm font-medium text-[#004B5C]">
+              PIC
+            </span>
+
+            <select
+              value={picFilter}
+              onChange={(event) =>
+                setPicFilter(event.target.value)
+              }
+              className="mt-2 w-full rounded-xl border border-[#004B5C]/10 bg-[#F7F0EC] px-3 py-2.5 text-sm text-[#004B5C] outline-none focus:border-[#004B5C]/30"
+            >
+              <option value="All PIC">
+                All PIC
+              </option>
+
+              {picOptions.map((person) => (
+                <option
+                  key={person}
+                  value={person}
+                >
+                  {person}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* YEAR */}
+          <label className="mt-4 block">
+            <span className="text-sm font-medium text-[#004B5C]">
+              Year
+            </span>
+
+            <select
+              value={yearFilter}
+              onChange={(event) => {
+                const selectedYear =
+                  event.target.value;
+
+                setYearFilter(
+                  selectedYear
+                );
+
+                if (
+                  selectedYear ===
+                  "All Time"
+                ) {
+                  setMonthFilter(
+                    "All Months"
+                  );
+                }
+              }}
+              className="mt-2 w-full rounded-xl border border-[#004B5C]/10 bg-[#F7F0EC] px-3 py-2.5 text-sm text-[#004B5C] outline-none focus:border-[#004B5C]/30"
+            >
+              <option value="All Time">
+                All Time
+              </option>
+
+              {yearOptions.map((year) => (
+                <option
+                  key={year}
+                  value={year}
+                >
+                  {year}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* MONTH */}
+          <label className="mt-4 block">
+            <span className="text-sm font-medium text-[#004B5C]">
+              Month
+            </span>
+
+            <select
+              value={monthFilter}
+              onChange={(event) =>
+                setMonthFilter(
+                  event.target.value
+                )
+              }
+              className="mt-2 w-full rounded-xl border border-[#004B5C]/10 bg-[#F7F0EC] px-3 py-2.5 text-sm text-[#004B5C] outline-none focus:border-[#004B5C]/30"
+            >
+              <option value="All Months">
+                All Months
+              </option>
+
+              {monthOptions.map((month) => (
+                <option
+                  key={month.value}
+                  value={month.value}
+                >
+                  {month.label}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          {/* QUICK PERIOD */}
+          <div className="mt-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-black/40">
+              Quick Period
+            </p>
+
+            <div className="mt-2 grid grid-cols-1 gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const now = new Date();
+                  setYearFilter(
+                    String(
+                      now.getFullYear()
+                    )
+                  );
+                  setMonthFilter(
+                    String(
+                      now.getMonth() + 1
+                    ).padStart(2, "0")
+                  );
+                }}
+                className="rounded-lg border border-[#004B5C]/15 bg-white px-3 py-2 text-left text-xs font-medium text-[#004B5C] transition hover:bg-[#004B5C]/5"
+              >
+                This Month
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setYearFilter(
+                    String(
+                      new Date().getFullYear()
+                    )
+                  );
+                  setMonthFilter(
+                    "All Months"
+                  );
+                }}
+                className="rounded-lg border border-[#004B5C]/15 bg-white px-3 py-2 text-left text-xs font-medium text-[#004B5C] transition hover:bg-[#004B5C]/5"
+              >
+                This Year
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setYearFilter(
+                    "All Time"
+                  );
+                  setMonthFilter(
+                    "All Months"
+                  );
+                }}
+                className="rounded-lg border border-[#730A2D]/20 bg-[#730A2D]/5 px-3 py-2 text-left text-xs font-medium text-[#730A2D] transition hover:bg-[#730A2D]/10"
+              >
+                All Time
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    {/* MAIN CONTENT */}
+   <div className="min-w-0">
+
+
         {/* =========================
             CURRENT SPRINT
         ========================== */}
-        <section id="overview">
+        <section id="overview" className="scroll-mt-24">
           <SectionHeading
             eyebrow="Current sprint"
             title="Sprint snapshot"
@@ -1044,19 +1606,16 @@ const completedTasks = useMemo(() => {
               detail="Average of tasks with progress"
             />
 
-            <MetricCard
-              label="Active tasks"
-              value={
-                loading
-                  ? "…"
-                  : String(
-                      activeWork.length
-                    )
-              }
-              detail="Current sprint"
-            />
-
-           <MetricCard
+       <MetricCard
+  label="Active tasks"
+  value={
+    loading
+      ? "…"
+      : String(activeWork.length)
+  }
+  detail="Current sprint"
+/>
+<MetricCard
   label="Completed"
   value={
     loading
@@ -1066,6 +1625,7 @@ const completedTasks = useMemo(() => {
   detail="View completed & archived tasks ↓"
   onClick={() => {
     const archivePanel = document.getElementById("completed-tasks");
+
     archivePanel?.scrollIntoView({
       behavior: "smooth",
       block: "start",
@@ -1090,7 +1650,10 @@ const completedTasks = useMemo(() => {
         {/* =========================
             MANAGEMENT SUMMARY
         ========================== */}
-        <section className="mt-8 rounded-2xl border border-[#004B5C]/10 bg-white p-6 shadow-sm">
+        <section
+        id="management-summary"
+        className="mt-8 scroll-mt-24 rounded-2xl border border-[#004B5C]/10 bg-white p-6 shadow-sm"
+>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#730A2D]">
             Management view
           </p>
@@ -1116,11 +1679,15 @@ const completedTasks = useMemo(() => {
         {/* =========================
             WHAT CHANGED
         ========================== */}
-        <section className="mt-8">
-          <SectionHeading
-            eyebrow="Since last update"
-            title="What changed"
-          />
+       {/* WHAT CHANGED */}
+<section
+  id="what-changed"
+  className="mt-8 scroll-mt-24"
+>
+  <SectionHeading
+    eyebrow="Since last update"
+    title="What changed"
+  />
 
           <div className="mt-5 grid gap-4 md:grid-cols-3">
   <ChangeCard
@@ -1153,12 +1720,14 @@ const completedTasks = useMemo(() => {
         {/* =========================
             ATTENTION REQUIRED
         ========================== */}
-        <section className="mt-8 rounded-2xl border border-[#730A2D]/15 bg-white p-6 shadow-sm">
-          <SectionHeading
-            eyebrow="Attention required"
-            title="What needs attention"
-          />
-
+       <section
+  id="attention-required"
+  className="mt-8 scroll-mt-24 rounded-2xl border border-[#730A2D]/15 bg-white p-6 shadow-sm"
+>
+         <SectionHeading
+  eyebrow="Attention required"
+  title="What needs attention"
+/>
           <div className="mt-5">
             {loading ? (
               <div className="rounded-xl bg-[#F7F0EC] p-5 text-sm text-black/55">
@@ -1271,7 +1840,7 @@ const completedTasks = useMemo(() => {
         ========================== */}
         <section
           id="active-work"
-          className="mt-8"
+          className="mt-8 scroll-mt-24"
         >
           <SectionHeading
             eyebrow="Current work"
@@ -1341,6 +1910,46 @@ const completedTasks = useMemo(() => {
                   )
                 )}
               </select>
+               
+{/* Year Filter */}
+<select
+  value={yearFilter}
+onChange={(event) => {
+  const selectedYear = event.target.value;
+
+  setYearFilter(selectedYear);
+
+  if (selectedYear === "All Time") {
+    setMonthFilter("All Months");
+  }
+}}
+  className="rounded-xl border border-[#004B5C]/10 bg-[#F7F0EC] px-4 py-3 text-sm text-[#004B5C] outline-none"
+>
+<option value="All Time">All Time</option>
+
+  {yearOptions.map((year) => (
+    <option key={year} value={year}>
+      {year}
+    </option>
+  ))}
+</select>
+
+              {/* Month Filter */}
+<select
+  value={monthFilter}
+  onChange={(event) => setMonthFilter(event.target.value)}
+  className="rounded-xl border border-[#004B5C]/10 bg-[#F7F0EC] px-4 py-3 text-sm text-[#004B5C] outline-none"
+>
+  <option value="All Months">All Months</option>
+  {monthOptions.map((month) => (
+  <option
+    key={month.value}
+    value={month.value}
+  >
+    {month.label}
+  </option>
+))}
+</select>
 
               {/* Status */}
               <select
@@ -1394,31 +2003,76 @@ const completedTasks = useMemo(() => {
                 )}
               </select>
             </div>
+       {/* Quick Period Selection */}
+<div className="mt-4 flex flex-wrap items-center gap-2">
+  <span className="mr-2 text-xs font-semibold uppercase tracking-wider text-black/40">
+    Quick Period:
+  </span>
 
+  <button
+    type="button"
+    onClick={() => {
+      const now = new Date();
+      setYearFilter(String(now.getFullYear()));
+      setMonthFilter(
+        String(now.getMonth() + 1).padStart(2, "0")
+      );
+    }}
+    className="rounded-lg border border-[#004B5C]/15 bg-white px-3 py-2 text-sm font-medium text-[#004B5C] hover:bg-[#004B5C]/5"
+  >
+    This Month
+  </button>
+
+  <button
+    type="button"
+    onClick={() => {
+      setYearFilter(String(new Date().getFullYear()));
+      setMonthFilter("All Months");
+    }}
+    className="rounded-lg border border-[#004B5C]/15 bg-white px-3 py-2 text-sm font-medium text-[#004B5C] hover:bg-[#004B5C]/5"
+  >
+    This Year
+  </button>
+
+  <button
+    type="button"
+    onClick={() => {
+      setYearFilter("All Time");
+      setMonthFilter("All Months");
+    }}
+    className="rounded-lg border border-[#730A2D]/20 bg-[#730A2D]/5 px-3 py-2 text-sm font-medium text-[#730A2D] hover:bg-[#730A2D]/10"
+  >
+    All Time
+  </button>
+</div>
             <div className="mt-4 flex flex-col gap-2 border-t border-[#004B5C]/10 pt-4 text-sm sm:flex-row sm:items-center sm:justify-between">
               <p className="text-black/50">
                 Showing{" "}
-                <span className="font-semibold text-[#004B5C]">
-                  {
-                    filteredActiveWork.length
-                  }
-                </span>{" "}
-                of{" "}
-                <span className="font-semibold text-[#004B5C]">
-                  {
-                    activeWork.length
-                  }
-                </span>{" "}
-                active tasks
+<span className="font-semibold text-[#004B5C]">
+  {filteredActiveWork.length}
+</span>{" "}
+of{" "}
+<span className="font-semibold text-[#004B5C]">
+  {
+    picFilteredTasks.filter(
+      (task) =>
+        task.sprint === "Active Sprint" &&
+        task.status !== "Cancelled"
+    ).length
+  }
+</span>{" "}
+active tasks
               </p>
 
-              {(searchQuery ||
-                picFilter !==
-                  "All PIC" ||
-                statusFilter !==
-                  "All Status" ||
-                priorityFilter !==
-                  "All Priority") && (
+
+                {(
+  searchQuery ||
+  picFilter !== "All PIC" ||
+  yearFilter !== String(new Date().getFullYear()) ||
+  monthFilter !== "All Months" ||
+  statusFilter !== "All Status" ||
+  priorityFilter !== "All Priority"
+) && (
                 <button
                   type="button"
                   onClick={clearFilters}
@@ -1488,100 +2142,90 @@ const completedTasks = useMemo(() => {
             SPRINT OVERVIEW
         ========================== */}
         <section className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
+          <div id="current-state" className="scroll-mt-24">
           <InfoPanel
             eyebrow="Sprint overview"
             title="Current state"
           >
             <InfoRow
-              label="Active tasks"
-              value={String(
-                activeWork.length
-              )}
-            />
+  label="Active tasks"
+  value={String(activeWork.length)}
+/>
 
-            <InfoRow
-              label="In progress"
-              value={String(
-                activeWork.filter(
-                  (task) =>
-                    task.status ===
-                    "In progress"
-                ).length
-              )}
-            />
-
-            <InfoRow
-              label="Not started"
-              value={String(
-                activeWork.filter(
-                  (task) =>
-                    task.status ===
-                    "Not started"
-                ).length
-              )}
-            />
-
-            <InfoRow
-              label="Done"
-              value={String(
-                completedActiveTasks.length
-              )}
-            />
+<InfoRow
+  label="In progress"
+  value={String(
+    activeWork.filter(
+      (task) => task.status === "In progress"
+    ).length
+  )}
+/>
+          
+    <InfoRow
+  label="Not started"
+  value={String(
+    activeWork.filter(
+      (task) => task.status === "Not started"
+    ).length
+  )}
+/>
+           <InfoRow
+  label="Done"
+  value={String(completedActiveTasks.length)}
+/>
           </InfoPanel>
-
+        </div>
+        <div id="by-priority" className="scroll-mt-24">
           <InfoPanel
             eyebrow="Work composition"
             title="By priority"
           >
             <InfoRow
-              label="Critical"
-              value={String(
-                activeWork.filter(
-                  (task) =>
-                    task.priority ===
-                    "Critical"
-                ).length
-              )}
-            />
+  label="Critical"
+  value={String(
+    activeWork.filter(
+      (task) =>
+        task.sprint === "Active Sprint" &&
+        task.status !== "Cancelled" &&
+        task.priority === "Critical"
+    ).length
+  )}
+/>
 
-            <InfoRow
-              label="High Priority"
-              value={String(
-                activeWork.filter(
-                  (task) =>
-                    task.priority ===
-                    "High Priority"
-                ).length
-              )}
-            />
+<InfoRow
+  label="High Priority"
+  value={String(
+    activeWork.filter(
+      (task) => task.priority === "High Priority"
+    ).length
+  )}
+/>
 
-            <InfoRow
-              label="Medium"
-              value={String(
-                activeWork.filter(
-                  (task) =>
-                    task.priority ===
-                      "Medium" ||
-                    task.priority ===
-                      "Medium Priority"
-                ).length
-              )}
-            />
+ <InfoRow
+  label="Medium"
+  value={String(
+    activeWork.filter(
+      (task) =>
+        task.priority === "Medium" ||
+        task.priority === "Medium Priority"
+    ).length
+  )}
+/>
 
-            <InfoRow
-              label="Low"
-              value={String(
-                activeWork.filter(
-                  (task) =>
-                    task.priority ===
-                      "Low" ||
-                    task.priority ===
-                      "Low Priority"
-                ).length
-              )}
-            />
+   <InfoRow
+  label="Low"
+  value={String(
+    activeWork.filter(
+      (task) =>
+        task.priority === "Low" ||
+        task.priority === "Low Priority"
+    ).length
+  )}
+/>
           </InfoPanel>
+        </div>
 
+<div id="next-sprint" className="scroll-mt-24">
           <InfoPanel
             eyebrow="Upcoming"
             title="Next Sprint"
@@ -1654,7 +2298,8 @@ const completedTasks = useMemo(() => {
               </p>
             )}
           </InfoPanel>
-
+        </div>
+        
         </section>
 
         {/* =========================
@@ -1734,7 +2379,10 @@ const completedTasks = useMemo(() => {
         {/* =========================
             BACKLOG
         ========================== */}
-        <section className="mt-8 rounded-2xl border border-[#004B5C]/10 bg-white p-6 shadow-sm">
+        <section
+  id="backlog"
+  className="mt-8 scroll-mt-24 rounded-2xl border border-[#004B5C]/10 bg-white p-6 shadow-sm"
+>
           <SectionHeading
             eyebrow="Outside sprint planning"
             title="Backlog / other work"
@@ -1858,10 +2506,14 @@ const completedTasks = useMemo(() => {
           )}
         </section>
 
-        {/* =========================
+     {/* =========================
             MONITORING TIMELINE
         ========================== */}
-        <section className="mt-8 rounded-2xl border border-[#004B5C]/10 bg-white p-6 shadow-sm">
+
+        <section
+          id="monitoring-timeline"
+          className="mt-8 scroll-mt-24 rounded-2xl border border-[#004B5C]/10 bg-white p-6 shadow-sm"
+        >
           <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <SectionHeading
               eyebrow="Current work"
@@ -2120,12 +2772,17 @@ const completedTasks = useMemo(() => {
               read-only management view.
             </p>
           </div>
-        </footer>
-      </div>
-    </main>
-  );
-}
+                </footer>
 
+      </div> {/* Tutup MAIN CONTENT */}
+
+    </div> {/* Tutup OVERVIEW LAYOUT */}
+
+  </div> {/* Tutup CONTAINER UTAMA */}
+
+</main>
+);
+}
 /* =========================
    SECTION HEADING
 ========================= */

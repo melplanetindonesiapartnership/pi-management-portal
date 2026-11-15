@@ -47,7 +47,15 @@ function getTitle(properties: UnknownRecord): string {
 }
 
 function getPeople(properties: UnknownRecord): string[] {
-  const property = properties["Assigned to"];
+  const propertyName = Object.keys(properties).find((key) =>
+    ["pic", "assigned to", "assignee"].includes(
+      key.trim().toLowerCase()
+    )
+  );
+
+  const property = propertyName
+    ? properties[propertyName]
+    : undefined;
 
   if (!isRecord(property) || property["type"] !== "people") {
     return [];

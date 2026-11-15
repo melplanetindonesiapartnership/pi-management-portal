@@ -3,7 +3,9 @@ import { Client } from "@notionhq/client";
 const token = process.env.NOTION_TOKEN;
 const dataSourceId =
   process.env.NOTION_TASKS_DATA_SOURCE_ID;
-
+const subtasksDataSourceId =
+  process.env.NOTION_SUBTASKS_DATA_SOURCE_ID;
+  
 type UnknownRecord = Record<string, unknown>;
 
 function isRecord(
@@ -425,25 +427,48 @@ function getProgress(
 function getSubtaskCount(
   properties: UnknownRecord
 ): number {
-  const property =
-    properties["Subtasks"];
+  const property = properties["Subtasks"];
 
   if (
     !isRecord(property) ||
-    property["type"] !==
-      "relation"
+    property["type"] !== "relation"
   ) {
     return 0;
   }
 
-  const relation =
-    property["relation"];
+  const relation = property["relation"];
 
-  return Array.isArray(
-    relation
-  )
+  return Array.isArray(relation)
     ? relation.length
     : 0;
+}
+
+function getRelationIds(
+  properties: UnknownRecord,
+  propertyName: string
+): string[] {
+  const property = properties[propertyName];
+
+  if (
+    !isRecord(property) ||
+    property["type"] !== "relation"
+  ) {
+    return [];
+  }
+
+  const relation = property["relation"];
+
+  if (!Array.isArray(relation)) {
+    return [];
+  }
+
+  return relation
+    .filter(isRecord)
+    .map((item) => item["id"])
+    .filter(
+      (id): id is string =>
+        typeof id === "string" && id.length > 0
+    );
 }
 
 function getLastEditedTime(
@@ -471,11 +496,80 @@ function getLastEditedTime(
     : null;
 }
 
+async function getSubtaskPeopleByTask(
+  notion: Client,
+  subtasksDataSourceId: string
+): Promise<Map<string, string[]>> {
+  const peopleByTask = new Map<string, Set<string>>();
+
+  let cursor: string | undefined = undefined;
+
+  while (true) {
+    const response = await notion.dataSources.query({
+      data_source_id: subtasksDataSourceId,
+      page_size: 100,
+      ...(cursor ? { start_cursor: cursor } : {}),
+    });
+
+    for (const item of response.results) {
+      if (
+        !("properties" in item) ||
+        !isRecord(item.properties)
+      ) {
+        continue;
+      }
+
+      const properties = item.properties as UnknownRecord;
+
+      const parentTaskIds = getRelationIds(
+        properties,
+        "Parent Main Tasks"
+      );
+
+      const assignedPeople = getPeople(properties);
+
+      if (
+        parentTaskIds.length === 0 ||
+        assignedPeople.length === 0
+      ) {
+        continue;
+      }
+
+      for (const parentTaskId of parentTaskIds) {
+        const peopleForTask =
+          peopleByTask.get(parentTaskId) ??
+          new Set<string>();
+
+        for (const person of assignedPeople) {
+          peopleForTask.add(person);
+        }
+
+        peopleByTask.set(parentTaskId, peopleForTask);
+      }
+    }
+
+    if (!response.has_more || !response.next_cursor) {
+      break;
+    }
+
+    cursor = response.next_cursor;
+  }
+
+  const result = new Map<string, string[]>();
+
+  for (const [taskId, people] of peopleByTask) {
+    result.set(taskId, Array.from(people));
+  }
+
+  return result;
+}
+
 type Task = {
   id: string;
   name: string;
   description: string;
   assignedTo: string[];
+  subtaskAssignedTo: string[];
   status: string | null;
   progress: number | null;
   priority: string | null;
@@ -510,11 +604,27 @@ export async function GET(): Promise<Response> {
       );
     }
 
+    if (!subtasksDataSourceId) {
+  return Response.json(
+    {
+      success: false,
+      error:
+        "NOTION_SUBTASKS_DATA_SOURCE_ID belum tersedia di .env.local.",
+    },
+    { status: 500 }
+  );
+}
+
     const notion =
       new Client({
         auth: token,
       });
 
+const subtaskPeopleByTask =
+  await getSubtaskPeopleByTask(
+    notion,
+    subtasksDataSourceId
+  );
     const allTasks: Task[] = [];
 
     let cursor:
@@ -639,7 +749,9 @@ export async function GET(): Promise<Response> {
             ),
 
           assignedTo,
-
+          subtaskAssignedTo:
+  subtaskPeopleByTask.get(item.id) ?? [],
+  
           status:
             getStatus(
               queryProperties
