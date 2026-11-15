@@ -1,12 +1,7 @@
 import TopNav from "../components/TopNav";
+import { EVENT_OPERATIONS_URL } from "../lib/links";
 
-// Apps Script /exec deployment, restricted to planetindonesia.org.
-// Opened in a new tab instead of an iframe: Google redirects framed requests to
-// docs.google.com (account chooser / access pages), which refuse to be framed
-// when the viewer's default Google account is not the PI account or
-// third-party cookies are blocked.
-const EVENT_OPERATIONS_URL =
-  "https://script.google.com/a/macros/planetindonesia.org/s/AKfycbyfSIcl3kXjULsd8SBK_WEB3zuDU01gn03C7lJcAE5yrc0i7xMYeX7J4mj6cj6SBzB_7Q/exec";
+// Fallback page for direct visits to /event-operations; the TopNav menu opens the app in a new tab.
 
 export default function EventOperationsPage() {
   return (

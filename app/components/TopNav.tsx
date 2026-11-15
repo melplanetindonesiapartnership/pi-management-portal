@@ -8,6 +8,7 @@ import {
 } from "react";
 import Image from "next/image";
 import { usePathname, useRouter } from "next/navigation";
+import { EVENT_OPERATIONS_URL } from "../lib/links";
 
 type Section =
   | "overview"
@@ -362,8 +363,8 @@ export default function TopNav() {
    * Event Operations
    */
   function goToEventOperations() {
-    setActiveSection("event-operations");
-    router.push("/event-operations");
+    // External Apps Script: open in a new tab, keep the current page and active section.
+    window.open(EVENT_OPERATIONS_URL, "_blank", "noopener,noreferrer");
   }
 
   /*
@@ -515,7 +516,7 @@ export default function TopNav() {
                 : "text-white/60 hover:text-white"
             }`}
           >
-            Event Operations
+            Event Operations ↗
           </button>
 
           {/* Portal Review */}
