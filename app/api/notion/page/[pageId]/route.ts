@@ -48,13 +48,13 @@ export async function GET(
      * Ambil property halaman
      */
     const pageProperties =
-      (page as any).properties || {};
+      "properties" in page ? page.properties : {};
 
     return NextResponse.json({
       success: true,
       page: {
-        id: (page as any).id,
-        url: (page as any).url || null,
+        id: page.id,
+        url: "url" in page ? page.url : null,
         properties: pageProperties,
       },
       blocks: blocks.results,

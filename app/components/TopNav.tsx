@@ -17,12 +17,42 @@ type Section =
   | "directory"
   | "portal-review";
 
+function sectionForPath(pathname: string): Section {
+  if (
+    pathname === "/publications" ||
+    pathname.startsWith("/publications/")
+  ) {
+    return "publications";
+  }
+
+  if (pathname === "/directory") {
+    return "directory";
+  }
+
+  if (pathname === "/partners") {
+    return "partners";
+  }
+
+  if (pathname === "/monitoring") {
+    return "monitoring";
+  }
+
+  if (
+    pathname === "/partner-review" ||
+    pathname.startsWith("/partner-review/")
+  ) {
+    return "portal-review";
+  }
+
+  return "overview";
+}
+
 export default function TopNav() {
   const pathname = usePathname();
   const router = useRouter();
 
   const [activeSection, setActiveSection] =
-    useState<Section>("overview");
+    useState<Section>(() => sectionForPath(pathname));
 
   const navRef =
     useRef<HTMLElement | null>(null);
@@ -111,70 +141,16 @@ export default function TopNav() {
 
   /*
    * Determine active section from current URL.
+   * Derived during render (not in an effect) to avoid cascading renders.
+   * On "/" the homepage scroll effect below picks Overview or Sprints.
    */
-  useEffect(() => {
-    if (
-      pathname === "/publications" ||
-      pathname.startsWith("/publications/")
-    ) {
-      setActiveSection("publications");
-      return;
-    }
+  const [prevPathname, setPrevPathname] =
+    useState(pathname);
 
-    if (pathname === "/directory") {
-      setActiveSection("directory");
-      return;
-    }
-
-    if (pathname === "/partners") {
-      setActiveSection("partners");
-      return;
-    }
-
-    if (pathname === "/monitoring") {
-      setActiveSection("monitoring");
-      return;
-    }
-
-    if (
-      pathname === "/partner-review" ||
-      pathname.startsWith("/partner-review/")
-    ) {
-      setActiveSection("portal-review");
-      return;
-    }
-
-    /*
-     * Only homepage can switch between Overview and Sprints
-     * based on scroll position.
-     */
-    if (pathname === "/") {
-      const activeWork =
-        document.getElementById("active-work");
-
-      if (!activeWork) {
-        setActiveSection("overview");
-        return;
-      }
-
-      const activeWorkTop =
-        activeWork.getBoundingClientRect().top +
-        window.scrollY;
-
-      const trigger =
-        activeWorkTop - 115;
-
-      if (window.scrollY >= trigger) {
-        setActiveSection("sprints");
-      } else {
-        setActiveSection("overview");
-      }
-
-      return;
-    }
-
-    setActiveSection("overview");
-  }, [pathname]);
+  if (pathname !== prevPathname) {
+    setPrevPathname(pathname);
+    setActiveSection(sectionForPath(pathname));
+  }
 
   /*
    * Move pill whenever active section changes.

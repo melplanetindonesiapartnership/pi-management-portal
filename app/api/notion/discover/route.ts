@@ -5,37 +5,51 @@ const notion = new Client({
   auth: process.env.NOTION_TOKEN,
 });
 
-function getTitle(item: any) {
-  if (!item) {
+type UnknownRecord = Record<string, unknown>;
+
+type PropertySummary = {
+  name: string;
+  type: string;
+};
+
+function isRecord(
+  value: unknown
+): value is UnknownRecord {
+  return typeof value === "object" && value !== null;
+}
+
+function plainText(parts: unknown[]): string {
+  return parts
+    .map((part) =>
+      isRecord(part) && typeof part.plain_text === "string"
+        ? part.plain_text
+        : ""
+    )
+    .join("")
+    .trim();
+}
+
+function getTitle(item: unknown) {
+  if (!isRecord(item)) {
     return "Untitled";
   }
 
   // Database / data source title
   if (Array.isArray(item.title)) {
-    return (
-      item.title
-        .map((part: any) => part?.plain_text || "")
-        .join("")
-        .trim() || "Untitled"
-    );
+    return plainText(item.title) || "Untitled";
   }
 
   // Page title
-  if (item.properties) {
+  if (isRecord(item.properties)) {
     for (const property of Object.values(
       item.properties
-    ) as any[]) {
+    )) {
       if (
-        property?.type === "title" &&
+        isRecord(property) &&
+        property.type === "title" &&
         Array.isArray(property.title)
       ) {
-        const title = property.title
-          .map(
-            (part: any) =>
-              part?.plain_text || ""
-          )
-          .join("")
-          .trim();
+        const title = plainText(property.title);
 
         if (title) {
           return title;
@@ -48,16 +62,20 @@ function getTitle(item: any) {
 }
 
 function getPropertySummary(
-  properties: Record<string, any> | undefined
-) {
-  if (!properties) {
+  properties: unknown
+): PropertySummary[] {
+  if (!isRecord(properties)) {
     return [];
   }
 
   return Object.entries(properties).map(
     ([name, property]) => ({
       name,
-      type: property?.type || "unknown",
+      type:
+        isRecord(property) &&
+        typeof property.type === "string"
+          ? property.type
+          : "unknown",
     })
   );
 }
@@ -75,14 +93,16 @@ async function runSearch(
     return {
       query,
       results: response.results.map(
-        (item: any) => ({
+        (item) => ({
           id: item.id,
           object: item.object,
           title: getTitle(item),
-          url: item.url || null,
+          url: "url" in item ? item.url : null,
           properties:
             getPropertySummary(
-              item.properties
+              "properties" in item
+                ? item.properties
+                : undefined
             ),
         })
       ),
@@ -146,8 +166,10 @@ export async function GET() {
      * is easier to read.
      */
 
-    const uniqueMap =
-      new Map<string, any>();
+    const uniqueMap = new Map<
+      string,
+      (typeof results)[number]["results"][number]
+    >();
 
     for (const searchResult of results) {
       for (const item of searchResult.results) {
@@ -175,30 +197,14 @@ export async function GET() {
       const result = {
         ...item,
         schema: null as
-          | any[]
+          | PropertySummary[]
           | null,
       };
 
       try {
-        if (item.object === "database") {
-          const database =
-            await notion.databases.retrieve(
-              {
-                database_id:
-                  item.id,
-              }
-            );
-
-          result.schema =
-            getPropertySummary(
-              (database as any)
-                .properties
-            );
-        }
-
         /*
-         * Newer Notion API versions may
-         * return data_source objects.
+         * Search in this Notion API version returns
+         * page or data_source objects (no "database").
          */
 
         if (
@@ -206,9 +212,7 @@ export async function GET() {
           "data_source"
         ) {
           const dataSource =
-            await (
-              notion as any
-            ).dataSources.retrieve(
+            await notion.dataSources.retrieve(
               {
                 data_source_id:
                   item.id,
