@@ -1,0 +1,572 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Patrol YPI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=DM+Serif+Text&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.5.3/dist/MarkerCluster.css">
+<link rel="stylesheet" href="kelola.css?v=20261116c">
+<style>
+  /* Palet Planet Indonesia */
+  :root {
+    --teal: #004B5C; --burgundy: #730A2D; --yellow: #FFB432; --orange: #F06437;
+    --offwhite: #F7F0EC; --ink: #12262b; --muted: #5b6b70; --line: #e4dbd5;
+    --panel: rgba(247, 240, 236, .97); --shadow: 0 8px 28px rgba(0, 40, 50, .18);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; font-family: "Instrument Sans", "Open Sans", system-ui, sans-serif; color: var(--ink); background: var(--offwhite); }
+  button, select, input { font: inherit; }
+
+  /* Kepala halaman */
+  .top { position: fixed; inset: 0 0 auto 0; height: 84px; z-index: 1000; background: var(--teal); color: #fff;
+         display: flex; align-items: center; gap: 16px; padding: 0 20px 12px; }
+  /* Pita pola resmi PI (kuning) di bawah header, seperti template peta YPI */
+  .top::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 12px;
+                background: var(--yellow) url("assets/pat_h.png") repeat-x center / auto 12px; }
+  .top img { height: 44px; padding-right: 16px; border-right: 1px solid rgba(255,255,255,.3); }
+  .top .judul { line-height: 1.2; }
+  .top h1 { margin: 0; font-weight: 700; font-size: 20px; letter-spacing: .02em; text-transform: uppercase; }
+  .top small { color: var(--yellow); font-size: 13px; }
+  .top .aksi { margin-left: auto; display: flex; gap: 8px; }
+  .top .aksi button { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.4); border-radius: 999px; padding: 6px 14px; cursor: pointer; font-size: 13px; }
+  .top .aksi button[aria-pressed="true"] { background: var(--yellow); color: var(--teal); border-color: var(--yellow); font-weight: 600; }
+  .top .aksi button.kelola { background: #fff; color: var(--teal); border-color: #fff; font-weight: 600; }
+
+  #map { position: fixed; inset: 84px 0 0 0; }
+
+  /* Panel melayang */
+  .panel { position: fixed; top: 96px; bottom: 12px; z-index: 900; background: var(--panel); border-radius: 14px; box-shadow: var(--shadow);
+           overflow-y: auto; padding: 18px; transition: transform .25s ease, opacity .25s ease; }
+  .panel.kiri { left: 12px; width: 300px; }
+  .panel.kanan { right: 12px; width: 380px; }
+  .panel.tutup.kiri { transform: translateX(-110%); opacity: 0; pointer-events: none; }
+  .panel.tutup.kanan { transform: translateX(110%); opacity: 0; pointer-events: none; }
+  .panel h2 { font-family: "DM Serif Text", serif; font-weight: 400; color: var(--teal); font-size: 19px; margin: 0 0 4px; }
+  .panel h3 { font-size: 13px; font-weight: 600; color: var(--teal); margin: 20px 0 8px; text-transform: uppercase; letter-spacing: .05em; }
+  .ket { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
+
+  label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin: 12px 0 4px; }
+  select { width: 100%; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--ink); }
+  .baris { display: flex; gap: 8px; } .baris > div { flex: 1; }
+  .cek { display: flex; align-items: center; gap: 8px; margin-top: 14px; font-size: 14px; font-weight: 500; color: var(--ink); }
+  .cek input { accent-color: var(--burgundy); width: 16px; height: 16px; }
+  .reset { margin-top: 14px; width: 100%; padding: 8px; border-radius: 8px; border: 1px solid var(--teal); background: #fff; color: var(--teal); cursor: pointer; font-weight: 600; }
+  .reset:hover { background: var(--teal); color: #fff; }
+
+  .legenda { display: grid; gap: 6px; }
+  .legenda div { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .legenda svg { flex: none; }
+
+  /* Angka ringkasan */
+  .angka { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .angka div { background: #fff; border-radius: 10px; padding: 10px 12px; border-left: 4px solid var(--teal); }
+  .angka div.merah { border-left-color: var(--burgundy); }
+  .angka div.jingga { border-left-color: var(--orange); }
+  .angka div.kuning { border-left-color: var(--yellow); }
+  .angka b { display: block; font-size: 24px; color: var(--teal); line-height: 1.1; }
+  .angka span { font-size: 12px; color: var(--muted); }
+  .grafik { background: #fff; border-radius: 10px; padding: 10px; }
+  .grafik canvas { width: 100% !important; }
+  #status { font-size: 13px; color: var(--muted); }
+
+  /* Klaster dan popup */
+  .marker-cluster { background: rgba(0, 75, 92, .25); }
+  .marker-cluster div { background: var(--teal); color: #fff; font-weight: 700; font-family: "Instrument Sans", sans-serif; }
+  .marker-cluster-medium { background: rgba(255, 180, 50, .35); }
+  .marker-cluster-medium div { background: #c98410; }
+  .marker-cluster-large { background: rgba(240, 100, 55, .35); }
+  .marker-cluster-large div { background: var(--orange); }
+  .marker-cluster div { width: 30px; height: 30px; margin-left: 5px; margin-top: 5px; border-radius: 15px; text-align: center; font-size: 12px; }
+  .marker-cluster span { line-height: 30px; }
+  .marker-cluster { border-radius: 20px; }
+  .ikon { background: none; border: 0; }
+  .leaflet-popup-content-wrapper { border-radius: 12px; }
+  .leaflet-popup-content { font-family: "Instrument Sans", sans-serif; font-size: 13px; margin: 12px 14px; }
+  .pop-judul { font-weight: 700; color: var(--teal); font-size: 14px; margin-bottom: 6px; }
+  .pop-langgar { display: inline-block; background: var(--burgundy); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 11px; margin-left: 4px; vertical-align: middle; }
+  .leaflet-popup-content table td { padding: 2px 8px 2px 0; vertical-align: top; }
+  .leaflet-popup-content table td:first-child { color: var(--muted); white-space: nowrap; }
+  .tabel-mini { max-height: 300px; overflow: auto; padding: 0; }
+  .tabel-mini table { border-collapse: collapse; width: 100%; font-size: 12px; }
+  .tabel-mini th, .tabel-mini td { padding: 5px 7px; border-bottom: 1px solid var(--line); text-align: left; vertical-align: top; }
+  .tabel-mini th { background: var(--offwhite); color: var(--teal); position: sticky; top: 0; font-weight: 600; }
+  .tabel-mini td.angka-kanan, .tabel-mini th.angka-kanan { text-align: right; white-space: nowrap; }
+  .tabel-mini td.er { font-weight: 700; color: var(--burgundy); }
+  .pop-galeri { display: grid; grid-template-columns: repeat(auto-fill, minmax(76px, 1fr)); gap: 4px; margin: 6px 0 8px; }
+  .pop-foto { padding: 0; border: 0; background: var(--offwhite); border-radius: 6px; overflow: hidden; cursor: zoom-in; aspect-ratio: 1; }
+  .pop-foto img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #lightbox { position: fixed; inset: 0; z-index: 4000; background: rgba(0, 20, 26, .9); display: flex; align-items: center; justify-content: center; padding: 16px; }
+  #lightbox[hidden] { display: none; }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+  #lightboxTutup { position: absolute; top: 14px; right: 14px; background: #fff; color: var(--teal); border: 0; border-radius: 999px; width: 40px; height: 40px; font-size: 22px; cursor: pointer; }
+  .lencana-admin { display: inline-block; background: var(--burgundy); color: #fff; border-radius: 999px; padding: 1px 8px; font-size: 11px; margin-left: 4px; vertical-align: middle; }
+
+  @media (max-width: 760px) {
+    .top { gap: 10px; padding: 0 10px 12px; }
+    .top img { height: 30px; padding-right: 10px; }
+    .top small { display: none; }
+    .top h1 { font-size: 13px; }
+    .top h1 span { display: block; }
+    .top .aksi { gap: 4px; }
+    .top .aksi button { padding: 5px 9px; font-size: 12px; }
+    .panel.kiri, .panel.kanan { left: 8px; right: 8px; width: auto; top: auto; bottom: 8px; max-height: 62vh; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="assets/logo_white.png" alt="Yayasan Planet Indonesia">
+  <div class="judul">
+    <h1>Smart Patrol <span>Yayasan Planet Indonesia</span></h1>
+    <small>Data patroli tim masyarakat di kawasan dampingan YPI</small>
+  </div>
+  <div class="aksi">
+    <button id="btnFilter" aria-pressed="true">Filter</button>
+    <button id="btnStat" aria-pressed="true">Statistik</button>
+    <button id="btnKelola" class="kelola">Kelola Data</button>
+  </div>
+</header>
+
+<div id="map"></div>
+
+<div id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Foto temuan" onclick="if (event.target === this) tutupLightbox()">
+  <img id="lightboxImg" alt="Foto temuan ukuran besar">
+  <button id="lightboxTutup" onclick="tutupLightbox()" aria-label="Tutup foto">×</button>
+</div>
+
+<aside class="panel kiri" id="pFilter">
+  <h2>Saring temuan</h2>
+  <p class="ket" id="status">Memuat data…</p>
+  <div class="baris">
+    <div><label for="dari">Dari tahun</label><select id="dari"></select></div>
+    <div><label for="sampai">Sampai tahun</label><select id="sampai"></select></div>
+  </div>
+  <label for="bulan">Bulan</label><select id="bulan"><option value="">Semua bulan</option></select>
+  <label for="mitra">Mitra</label><select id="mitra"><option value="">Semua mitra</option></select>
+  <label for="kawasan">Kawasan / desa</label><select id="kawasan"><option value="">Semua kawasan</option></select>
+  <label for="tim">Tim patroli</label><select id="tim"><option value="">Semua tim</option></select>
+  <label for="kategori">Kategori</label><select id="kategori"><option value="">Semua kategori</option></select>
+  <label for="sub">Jenis temuan</label><select id="sub"><option value="">Semua jenis</option></select>
+  <label class="cek"><input type="checkbox" id="langgar"> Hanya pelanggaran</label>
+  <button class="reset" id="reset">Atur ulang filter</button>
+
+  <h3>Keterangan ikon</h3>
+  <div class="legenda" id="legenda"></div>
+</aside>
+
+<aside class="panel kanan" id="pStat">
+  <h2>Ringkasan</h2>
+  <p class="ket" id="rentang"></p>
+  <div class="angka">
+    <div><b id="sTotal">–</b><span>temuan</span></div>
+    <div class="merah"><b id="sLanggar">–</b><span>pelanggaran</span></div>
+    <div class="kuning"><b id="sSatwa">–</b><span>temuan satwa liar</span></div>
+    <div class="jingga"><b id="sSpesies">–</b><span>spesies satwa</span></div>
+  </div>
+  <h3>Effort patroli</h3>
+  <div class="angka">
+    <div><b id="eKm">–</b><span>km dipatroli</span></div>
+    <div><b id="eJam">–</b><span>jam patroli aktif</span></div>
+    <div class="kuning"><b id="ePatroli">–</b><span>patroli</span></div>
+    <div class="merah"><b id="eRate">–</b><span id="eRateKet">temuan per km</span></div>
+  </div>
+  <p class="ket" id="eCatatan" style="margin-top:8px"></p>
+  <h3>Tren encounter rate</h3>
+  <div class="baris" style="align-items:end;margin:0 0 6px">
+    <div><label for="erSkala" style="margin-top:0">Tampilkan per</label>
+      <select id="erSkala"><option value="bulan">Bulan</option><option value="tahun">Tahun</option></select></div>
+  </div>
+  <p class="ket" style="margin:0 0 6px">Temuan unik ÷ km patroli dalam periode itu. Mengikuti filter tahun, bulan, kategori, dan jenis temuan. Tanda × = effort &lt; 1 km.</p>
+  <div class="grafik"><canvas id="gER" height="170"></canvas><p class="ket" id="erKosong" style="margin:6px 0 0">Belum ada hari patroli dengan data jarak.</p></div>
+  <h3 id="judulAktivitas">Aktivitas manusia per bulan</h3>
+  <p class="ket" style="margin:0 0 6px">Temuan unik aktivitas manusia ÷ km patroli mitra itu dalam periode yang sama (ikut pilihan "Tampilkan per" di atas). Terbaru di atas.</p>
+  <div class="grafik tabel-mini"><table id="tAktivitas"></table></div>
+  <h3>Temuan per tahun</h3>
+  <div class="grafik"><canvas id="gTahun" height="170"></canvas></div>
+  <h3>Tren bulanan</h3>
+  <div class="grafik"><canvas id="gBulan" height="150"></canvas></div>
+  <h3>Aktivitas manusia</h3>
+  <div class="grafik"><canvas id="gAncaman" height="200"></canvas></div>
+  <h3>Satwa paling sering dijumpai</h3>
+  <div class="grafik"><canvas id="gSpesies" height="260"></canvas></div>
+  <h3>Temuan per tim</h3>
+  <div class="grafik"><canvas id="gTim" height="170"></canvas></div>
+</aside>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// Publishable key aman di frontend: RLS hanya mengizinkan baca kolom publik.
+const SUPABASE_URL = 'https://nujjasyndlkzmnrjiqsu.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_s0W9IZqdWi7vhCrqhR8gDw_98oEi_LP';
+const KOLOM = 'id,patroli_id,waypoint_id,foto,mitra,desa,kelompok,kawasan,tim,waktu,lon,lat,kategori,subkategori,jenis_observasi,spesies_satwa,spesies_tumbuhan,jenis_kelamin,umur,jumlah,satuan,total_orang,pelanggaran,tindakan,kondisi_fitur';
+
+const PI = { teal: '#004B5C', burgundy: '#730A2D', yellow: '#FFB432', orange: '#F06437', abu: '#7d8f94', hijau: '#3f7d4e' };
+const WARNA_KAT = {
+  'Satwa Liar': PI.teal, 'Aktivitas Manusia': PI.orange, 'Tumbuhan': PI.hijau, 'Fitur': PI.burgundy,
+  'Pemanfaatan': '#c98410', 'Pengelolaan': '#3a8a96', 'Bencana Alam': '#b04a6b', 'Posisi': PI.abu
+};
+
+// Glyph putih sederhana (viewBox 0 0 24 24) per jenis temuan.
+const G = {
+  satwa: '<ellipse cx="12" cy="15.5" rx="4.2" ry="3.4"/><circle cx="6.5" cy="10" r="1.9"/><circle cx="10" cy="6.8" r="1.9"/><circle cx="14" cy="6.8" r="1.9"/><circle cx="17.5" cy="10" r="1.9"/>',
+  mati: '<path d="M6 6l12 12M18 6L6 18" stroke="#fff" stroke-width="3" stroke-linecap="round"/>',
+  buru: '<circle cx="12" cy="12" r="6" fill="none" stroke="#fff" stroke-width="2.2"/><path d="M12 3v5M12 16v5M3 12h5M16 12h5" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/>',
+  pohon: '<path d="M12 3l6 9h-3.5l4 6H5.5l4-6H6z"/><rect x="10.8" y="17" width="2.4" height="4"/>',
+  ikan: '<ellipse cx="11" cy="12" rx="6.5" ry="4"/><path d="M16.5 12l4.5-3.5v7z"/><circle cx="8" cy="11" r="1" fill="#000" opacity=".35"/>',
+  perahu: '<path d="M3 14h18l-3 5H6z"/><path d="M11 4v9H6z"/><path d="M12.5 6v7H17z"/>',
+  orang: '<circle cx="12" cy="7" r="3.2"/><path d="M5.5 20c0-4 2.9-7 6.5-7s6.5 3 6.5 7z"/>',
+  daun: '<path d="M5 19C5 10 11 5 20 5c0 9-5 15-14 15z"/><path d="M5 19l9-9" stroke="#000" stroke-opacity=".3" stroke-width="1.4"/>',
+  area: '<rect x="5" y="5" width="14" height="14" rx="2" fill="none" stroke="#fff" stroke-width="2.4" stroke-dasharray="3 2"/>',
+  rumah: '<path d="M12 4l8 7h-2.5v8h-11v-8H4z"/>',
+  titik: '<circle cx="12" cy="12" r="4"/>',
+  lain: '<circle cx="7" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="17" cy="12" r="1.8"/>'
+};
+const JENIS = [
+  ['Perjumpaan Satwa', 'satwa', 'Perjumpaan satwa'],
+  ['Tanda Satwa', 'satwa', 'Tanda satwa'],
+  ['Satwa Mati', 'mati', 'Satwa mati'],
+  ['Perburuan Satwa', 'buru', 'Perburuan satwa'],
+  ['Pembalakan', 'pohon', 'Pembalakan'],
+  ['Penangkapan Ikan', 'ikan', 'Penangkapan ikan'],
+  ['Alat Kerja dan Transportasi', 'perahu', 'Alat kerja & transportasi'],
+  ['Pelaku', 'orang', 'Pelaku'],
+  ['Pengambilan HHBK', 'daun', 'Pengambilan HHBK'],
+  ['Penggunaan Kawasan', 'area', 'Penggunaan kawasan']
+];
+const GLYPH_SUB = Object.fromEntries(JENIS.map(([s, g]) => [s, g]));
+function glyph(r) {
+  if (GLYPH_SUB[r.subkategori]) return GLYPH_SUB[r.subkategori];
+  return { 'Tumbuhan': 'daun', 'Fitur': 'rumah', 'Posisi': 'titik' }[r.kategori] || 'lain';
+}
+function svgIkon(g, warna, langgar, ukuran = 28) {
+  const ring = langgar ? `<circle cx="16" cy="16" r="15" fill="none" stroke="${PI.yellow}" stroke-width="3"/>` : '';
+  return `<svg width="${ukuran}" height="${ukuran}" viewBox="0 0 32 32" aria-hidden="true">
+    <circle cx="16" cy="16" r="13" fill="${warna}" stroke="#fff" stroke-width="2"/>${ring}
+    <g transform="translate(6 6) scale(.833)" fill="#fff">${G[g]}</g></svg>`;
+}
+const cacheIkon = {};
+function ikonLeaflet(r) {
+  const kunci = glyph(r) + r.kategori + !!r.pelanggaran;
+  return cacheIkon[kunci] ??= L.divIcon({ className: 'ikon', html: svgIkon(glyph(r), WARNA_KAT[r.kategori] || PI.abu, r.pelanggaran), iconSize: [28, 28], iconAnchor: [14, 14], popupAnchor: [0, -12] });
+}
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => n.toLocaleString('id-ID');
+const unik = arr => [...new Set(arr.filter(Boolean))].sort();
+
+// Peta
+const map = L.map('map', { zoomControl: false }).setView([-0.51, 109.18], 12);
+L.control.zoom({ position: 'bottomright' }).addTo(map);
+const citra = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Esri World Imagery' });
+const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap' }).addTo(map);
+const kontrolLapis = L.control.layers({ 'Peta jalan': osm, 'Citra satelit': citra }, null, { position: 'bottomright' }).addTo(map);
+L.control.scale({ position: 'bottomleft', imperial: false }).addTo(map);
+const cluster = L.markerClusterGroup({ chunkedLoading: true, maxClusterRadius: 50, showCoverageOnHover: false }).addTo(map);
+
+// Panel buka-tutup
+function pasangToggle(btn, panel) {
+  $(btn).addEventListener('click', () => {
+    const buka = $(panel).classList.toggle('tutup') === false;
+    $(btn).setAttribute('aria-pressed', buka);
+    if (innerWidth <= 760 && buka) { // di HP hanya satu panel terbuka
+      const lain = panel === 'pFilter' ? ['pStat', 'btnStat'] : ['pFilter', 'btnFilter'];
+      $(lain[0]).classList.add('tutup'); $(lain[1]).setAttribute('aria-pressed', false);
+    }
+  });
+}
+pasangToggle('btnFilter', 'pFilter'); pasangToggle('btnStat', 'pStat');
+if (innerWidth <= 760) { $('pStat').classList.add('tutup'); $('btnStat').setAttribute('aria-pressed', false); $('pFilter').classList.add('tutup'); $('btnFilter').setAttribute('aria-pressed', false); }
+
+// Data
+let semua = [], terfilter = [];
+// Zoom ke data hasil filter; dihitung dari data, bukan dari klaster (klaster dimuat bertahap).
+function fokus() {
+  if (terfilter.length) map.fitBounds(L.latLngBounds(terfilter.map(r => [r.lat, r.lon])), { padding: [20, 20] });
+}
+// Supabase REST membatasi 1000 baris per permintaan, jadi ambil per halaman.
+async function muat() {
+  const per = 1000;
+  for (let dari = 0; ; dari += per) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/temuan_patroli?select=${KOLOM}&order=id`, {
+      headers: { apikey: SUPABASE_KEY, Range: `${dari}-${dari + per - 1}` }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
+    const rows = await res.json();
+    semua.push(...rows);
+    $('status').textContent = `Memuat data… ${fmt(semua.length)}`;
+    if (rows.length < per) break;
+  }
+  semua.forEach(r => { r.tahun = r.waktu ? +r.waktu.slice(0, 4) : null; r.bulan = r.waktu ? r.waktu.slice(0, 7) : null; });
+  // Effort + jalur patroli.
+  const res = await fetch(`${SUPABASE_URL}/rest/v1/patroli?select=id,mitra,desa,sumber,kawasan,tim,tujuan,mulai,selesai,durasi_aktif_menit,jarak_m,jarak_jalur_m,jumlah_anggota,jalur`, { headers: { apikey: SUPABASE_KEY } });
+  if (res.ok) patroli = (await res.json()).map(p => ({ ...p, tahun: p.mulai ? +p.mulai.slice(0, 4) : null, km: (p.jarak_m ?? p.jarak_jalur_m ?? 0) / 1000 }));
+}
+let patroli = [];
+
+// Lapisan jalur patroli: garis berwarna per tim, titik mulai & selesai.
+const WARNA_JALUR = ['#004B5C', '#F06437', '#730A2D', '#c98410', '#3a8a96', '#3f7d4e', '#b04a6b'];
+map.createPane('jalur').style.zIndex = 390; // di atas peta dasar, di bawah ikon temuan
+const lapisJalur = L.featureGroup().addTo(map);
+kontrolLapis.addOverlay(lapisJalur, 'Jalur patroli');
+function saringJalur(f) {
+  lapisJalur.clearLayers();
+  const tims = unik(patroli.map(p => p.tim));
+  const jam = m => `${Math.floor(m / 60)} j ${Math.round(m % 60)} m`;
+  for (const p of patroli) {
+    if (!p.jalur?.coordinates?.length) continue;
+    if (!(p.tahun >= f.dari && p.tahun <= f.sampai) || !bulanCocok(f, p.mulai) || (f.mitra && p.mitra !== f.mitra) || (f.kawasan && p.kawasan !== f.kawasan) || (f.tim && p.tim !== f.tim)) continue;
+    const warna = WARNA_JALUR[tims.indexOf(p.tim) % WARNA_JALUR.length];
+    const nTemuan = semua.filter(r => r.patroli_id === p.id).length;
+    const isi = `<div class="pop-judul">Patroli ${esc(p.tim || '')}</div><table>
+      <tr><td>Kawasan</td><td>${esc(p.kawasan)}</td></tr>
+      ${p.tujuan ? `<tr><td>Tujuan</td><td>${esc(p.tujuan)}</td></tr>` : ''}
+      <tr><td>Waktu</td><td>${esc((p.mulai || '').replace('T', ' ').slice(0, 16))} – ${esc((p.selesai || '').slice(11, 16))}</td></tr>
+      <tr><td>Durasi aktif</td><td>${p.durasi_aktif_menit == null ? '–' : jam(+p.durasi_aktif_menit)}</td></tr>
+      <tr><td>Jarak</td><td>${p.km.toFixed(2)} km</td></tr>
+      <tr><td>Anggota</td><td>${p.jumlah_anggota ?? '–'}</td></tr>
+      <tr><td>Temuan</td><td>${nTemuan}${p.km > 0 ? ` (${(nTemuan / p.km).toFixed(2)} per km)` : ''}</td></tr></table>`;
+    const [x0, y0] = p.jalur.coordinates[0], [x1, y1] = p.jalur.coordinates.at(-1);
+    lapisJalur
+      .addLayer(L.geoJSON(p.jalur, { pane: 'jalur', style: { color: '#fff', weight: 7, opacity: .8 }, interactive: false })) // tepi putih supaya terbaca di citra
+      .addLayer(L.geoJSON(p.jalur, { pane: 'jalur', style: { color: warna, weight: 4, opacity: .95 } }).bindPopup(isi))
+      .addLayer(L.circleMarker([y0, x0], { pane: 'jalur', radius: 6, color: '#fff', weight: 2, fillColor: '#3f7d4e', fillOpacity: 1 }).bindTooltip('Mulai patroli'))
+      .addLayer(L.circleMarker([y1, x1], { pane: 'jalur', radius: 6, color: '#fff', weight: 2, fillColor: '#730A2D', fillOpacity: 1 }).bindTooltip('Selesai patroli'));
+  }
+}
+
+// Effort & encounter rate (temuan per km). Hanya temuan yang terhubung ke patroli yang dihitung.
+function effort(f, data) {
+  const p = patroli.filter(x => x.tahun >= f.dari && x.tahun <= f.sampai && bulanCocok(f, x.mulai) && (!f.mitra || x.mitra === f.mitra) && (!f.kawasan || x.kawasan === f.kawasan) && (!f.tim || x.tim === f.tim));
+  const km = p.reduce((s, x) => s + x.km, 0), jam = p.reduce((s, x) => s + (+x.durasi_aktif_menit || 0), 0) / 60;
+  const perId = new Map(p.map(x => [x.id, x]));
+  // Temuan unik: observasi ganda di waypoint yang sama dengan kategori & jenis sama dihitung sekali.
+  // Waypoint = SMART_SightingGroupId bila ada; data lama memakai waktu + lokasi.
+  const unikPer = new Map(); // tanggal patroli -> Set kunci temuan
+  for (const r of data) {
+    const x = r.patroli_id && perId.get(r.patroli_id);
+    if (!x) continue;
+    const tgl = x.mulai.slice(0, 10);
+    (unikPer.get(tgl) ?? unikPer.set(tgl, new Set()).get(tgl))
+      .add([r.waypoint_id || `${r.waktu}|${r.lon}|${r.lat}`, r.kategori, r.subkategori, r.spesies_satwa || r.jenis_observasi].join('|'));
+  }
+  const n = [...unikPer.values()].reduce((s, set) => s + set.size, 0);
+  // Encounter rate per periode = total temuan unik / total km patroli dalam periode (hari, bulan, atau tahun).
+  const skala = $('erSkala').value, panjang = { bulan: 7, tahun: 4 }[skala];
+  const kmPer = new Map(), nPer = new Map();
+  for (const x of p) if (x.km > 0) { const k = x.mulai.slice(0, panjang); kmPer.set(k, (kmPer.get(k) || 0) + x.km); }
+  for (const [tgl, set] of unikPer) { const k = tgl.slice(0, panjang); if (kmPer.has(k)) nPer.set(k, (nPer.get(k) || 0) + set.size); }
+  const hari = [...kmPer.keys()].sort();
+  const temuanHari = hari.map(t => nPer.get(t) || 0);
+  const labelPeriode = t => skala === 'bulan' ? `${NAMA_BULAN[+t.slice(5, 7) - 1].slice(0, 3)} ${t.slice(0, 4)}` : t;
+  gambar('gER', 'line', hari.map(labelPeriode), [{
+    label: 'Temuan unik per km', data: hari.map((t, i) => +(temuanHari[i] / kmPer.get(t)).toFixed(3)),
+    borderColor: PI.burgundy, backgroundColor: PI.burgundy, tension: .25, borderWidth: 2,
+    pointRadius: hari.map(t => kmPer.get(t) < 1 ? 3 : 5), pointStyle: hari.map(t => kmPer.get(t) < 1 ? 'crossRot' : 'circle')
+  }], {
+    scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 8 } }, y: { beginAtZero: true, grid: { color: '#eee6e0' }, title: { display: true, text: 'temuan / km' } } },
+    plugins: { tooltip: { callbacks: { label: c => {
+      const t = hari[c.dataIndex], km = kmPer.get(t);
+      return [`${c.parsed.y.toLocaleString('id-ID')} temuan/km`, `${temuanHari[c.dataIndex]} temuan unik · ${km.toLocaleString('id-ID', { maximumFractionDigits: 2 })} km`, ...(km < 1 ? ['effort < 1 km: belum stabil'] : [])];
+    } } } }
+  });
+  $('erKosong').hidden = hari.length > 0;
+  const desimal = v => v.toLocaleString('id-ID', { maximumFractionDigits: v < 10 ? 2 : 1 });
+  $('eKm').textContent = p.length ? desimal(km) : '–';
+  $('eJam').textContent = p.length ? desimal(jam) : '–';
+  $('ePatroli').textContent = fmt(p.length);
+  $('eRate').textContent = km > 0 ? desimal(n / km) : '–';
+  $('eRateKet').textContent = km > 0 && n ? `temuan unik per km (1 tiap ${desimal(km / n)} km)` : 'temuan unik per km';
+  const lain = data.filter(r => !r.patroli_id).length;
+  $('eCatatan').textContent = !p.length ? 'Belum ada data effort untuk filter ini. Effort berasal dari JSON SMART Mobile atau sheet Effort Patrol.'
+    : (km < 5 ? 'Effort rendah (< 5 km): encounter rate belum stabil. ' : '') +
+      (lain ? `${fmt(lain)} temuan tidak ikut dihitung karena tidak ada data effort di hari itu.` : '');
+  tabelAktivitas(data, perId, skala, panjang, labelPeriode);
+}
+
+// Rekap aktivitas manusia per periode (bulan/tahun, ikut pilihan grafik) x mitra x jenis aktivitas.
+// Km = total km patroli mitra itu dalam periode, jadi rate tiap mitra tidak tercampur.
+function tabelAktivitas(data, perId, skala, panjang, labelPeriode) {
+  const kmMitra = new Map();
+  for (const x of perId.values()) if (x.km > 0) {
+    const k = `${x.mulai.slice(0, panjang)}|${x.mitra || ''}`;
+    kmMitra.set(k, (kmMitra.get(k) || 0) + x.km);
+  }
+  const grup = new Map();
+  for (const r of data) {
+    const x = r.kategori === 'Aktivitas Manusia' && r.patroli_id && perId.get(r.patroli_id);
+    if (!x || !(x.km > 0)) continue;
+    const periode = x.mulai.slice(0, panjang), jenis = r.subkategori || '(tanpa jenis)';
+    const k = `${periode}|${x.mitra || ''}|${jenis}`;
+    const g = grup.get(k) ?? grup.set(k, { periode, mitra: x.mitra || '', jenis, km: kmMitra.get(`${periode}|${x.mitra || ''}`), unik: new Set() }).get(k);
+    // unik per hari patroli + titik/waypoint + jenis
+    g.unik.add([x.mulai.slice(0, 10), r.waypoint_id || `${r.waktu}|${r.lon}|${r.lat}`, r.spesies_satwa || r.jenis_observasi].join('|'));
+  }
+  const baris = [...grup.values()].sort((a, b) => b.periode.localeCompare(a.periode) || a.mitra.localeCompare(b.mitra) || a.jenis.localeCompare(b.jenis));
+  const maks = 200, d = v => v.toLocaleString('id-ID', { maximumFractionDigits: 2 });
+  $('judulAktivitas').textContent = `Aktivitas manusia per ${skala}`;
+  $('tAktivitas').innerHTML = baris.length
+    ? `<tr><th>${skala === 'bulan' ? 'Bulan' : 'Tahun'}</th><th>Mitra</th><th>Jenis aktivitas</th><th class="angka-kanan">Jumlah</th><th class="angka-kanan">Km</th><th class="angka-kanan">Per km</th></tr>` +
+      baris.slice(0, maks).map(g => `<tr><td>${esc(labelPeriode(g.periode))}</td><td>${esc(g.mitra)}</td><td>${esc(g.jenis)}</td>
+        <td class="angka-kanan">${g.unik.size}</td><td class="angka-kanan">${d(g.km)}</td><td class="angka-kanan er">${d(g.unik.size / g.km)}</td></tr>`).join('') +
+      (baris.length > maks ? `<tr><td colspan="6">… ${fmt(baris.length - maks)} baris lain; persempit dengan filter.</td></tr>` : '')
+    : '<tr><td>Tidak ada temuan aktivitas manusia yang terhubung ke data effort untuk filter ini.</td></tr>';
+}
+
+const urlFoto = p => `${SUPABASE_URL}/storage/v1/object/public/foto-temuan/${p.split('/').map(encodeURIComponent).join('/')}`;
+// Klik foto di popup -> tampil besar.
+document.addEventListener('click', e => {
+  const b = e.target.closest('.pop-foto');
+  if (b) { $('lightboxImg').src = b.dataset.foto; $('lightbox').hidden = false; $('lightboxTutup').focus(); }
+});
+function tutupLightbox() { $('lightbox').hidden = true; $('lightboxImg').src = ''; }
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !$('lightbox').hidden) tutupLightbox(); });
+
+function popup(r) {
+  const judul = r.spesies_satwa || r.spesies_tumbuhan || r.jenis_observasi || r.subkategori || r.kategori;
+  const baris = [
+    ['Waktu', r.waktu?.replace('T', ' ').slice(0, 16)], ['Mitra', r.mitra], ['Kawasan', r.kawasan], ['Tim', r.tim], ['Kategori', [r.kategori, r.subkategori].filter(Boolean).join(' · ')],
+    ['Jenis', r.jenis_observasi], ['Jumlah', r.jumlah != null ? `${r.jumlah} ${r.satuan || ''}` : null], ['Jumlah orang', r.total_orang],
+    ['Kelamin', r.jenis_kelamin], ['Umur', r.umur], ['Kondisi', r.kondisi_fitur], ['Tindakan', r.tindakan],
+    ['Koordinat', `${r.lat.toFixed(5)}, ${r.lon.toFixed(5)}`]
+  ].filter(([, v]) => v != null && v !== '');
+  const foto = (r.foto || []).map((p, i) => `<button class="pop-foto" data-foto="${esc(urlFoto(p))}" aria-label="Perbesar foto ${i + 1}">
+    <img src="${esc(urlFoto(p))}" alt="Foto temuan ${i + 1}" loading="lazy" onerror="this.parentElement.remove()"></button>`).join('');
+  return `<div class="pop-judul">${esc(judul)}${r.pelanggaran ? '<span class="pop-langgar">Pelanggaran</span>' : ''}</div>
+    ${foto ? `<div class="pop-galeri">${foto}</div>` : ''}
+    <table>${baris.map(([k, v]) => `<tr><td>${k}</td><td>${esc(v)}</td></tr>`).join('')}</table>`;
+}
+
+// Grafik
+Chart.defaults.font.family = '"Instrument Sans", sans-serif';
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#5b6b70';
+Chart.defaults.plugins.legend.display = false;
+const grafik = {};
+function gambar(id, type, labels, datasets, opsi = {}) {
+  const options = Object.assign({ responsive: true, animation: { duration: 300 }, scales: { x: { grid: { display: false } }, y: { beginAtZero: true, grid: { color: '#eee6e0' } } } }, opsi);
+  if (grafik[id]) { Object.assign(grafik[id], { options }); grafik[id].data.labels = labels; grafik[id].data.datasets = datasets; grafik[id].update(); return; }
+  grafik[id] = new Chart($(id), { type, data: { labels, datasets }, options });
+}
+const hitung = (data, f) => data.reduce((m, r) => { const k = f(r); if (k) m[k] = (m[k] || 0) + 1; return m; }, {});
+const teratas = (obj, n) => Object.entries(obj).sort((a, b) => b[1] - a[1]).slice(0, n);
+const horizontal = { indexAxis: 'y', scales: { x: { beginAtZero: true, grid: { color: '#eee6e0' } }, y: { grid: { display: false } } } };
+
+const NAMA_BULAN = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+const bulanCocok = (f, iso) => !f.bulan || +String(iso || '').slice(5, 7) === f.bulan;
+
+function filter() {
+  return { dari: +$('dari').value, sampai: +$('sampai').value, bulan: +$('bulan').value || 0, mitra: $('mitra').value, kawasan: $('kawasan').value, tim: $('tim').value, kat: $('kategori').value, sub: $('sub').value, langgar: $('langgar').checked };
+}
+
+function terapkan() {
+  const f = filter();
+  const data = semua.filter(r =>
+    r.tahun >= f.dari && r.tahun <= f.sampai && bulanCocok(f, r.waktu) &&
+    (!f.mitra || r.mitra === f.mitra) && (!f.kawasan || r.kawasan === f.kawasan) && (!f.tim || r.tim === f.tim) && (!f.kat || r.kategori === f.kat) &&
+    (!f.sub || r.subkategori === f.sub) && (!f.langgar || r.pelanggaran === true));
+
+  terfilter = data;
+  cluster.clearLayers();
+  cluster.addLayers(data.map(r => L.marker([r.lat, r.lon], { icon: ikonLeaflet(r), title: r.subkategori || r.kategori || '' }).bindPopup(() => popup(r))));
+
+  $('sTotal').textContent = fmt(data.length);
+  $('sLanggar').textContent = fmt(data.filter(r => r.pelanggaran).length);
+  $('sSatwa').textContent = fmt(data.filter(r => r.kategori === 'Satwa Liar').length);
+  $('sSpesies').textContent = fmt(unik(data.map(r => r.spesies_satwa)).length);
+  effort(f, data);
+  saringJalur(f);
+  $('rentang').textContent = `${f.bulan ? NAMA_BULAN[f.bulan - 1] + ' ' : ''}${f.dari}–${f.sampai}${f.mitra ? ' · ' + f.mitra : ''}${f.kawasan ? ' · ' + f.kawasan : ''}${f.tim ? ' · ' + f.tim : ''}${f.kat ? ' · ' + f.kat : ''}${f.sub ? ' · ' + f.sub : ''}${f.langgar ? ' · pelanggaran' : ''}`;
+
+  // Per tahun, ditumpuk per kategori
+  const tahun = []; for (let t = f.dari; t <= f.sampai; t++) tahun.push(t);
+  const kats = unik(data.map(r => r.kategori));
+  gambar('gTahun', 'bar', tahun, kats.map(k => ({
+    label: k, backgroundColor: WARNA_KAT[k] || PI.abu, borderRadius: 3,
+    data: tahun.map(t => data.filter(r => r.tahun === t && r.kategori === k).length)
+  })), { plugins: { legend: { display: true, position: 'bottom', labels: { boxWidth: 10 } } }, scales: { x: { stacked: true, grid: { display: false } }, y: { stacked: true, beginAtZero: true, grid: { color: '#eee6e0' } } } });
+
+  const perBulan = hitung(data, r => r.bulan);
+  const bulan = Object.keys(perBulan).sort();
+  gambar('gBulan', 'line', bulan, [{ data: bulan.map(b => perBulan[b]), borderColor: PI.teal, backgroundColor: 'rgba(0,75,92,.12)', fill: true, tension: .3, pointRadius: 0, borderWidth: 2 }],
+    { scales: { x: { grid: { display: false }, ticks: { maxTicksLimit: 6 } }, y: { beginAtZero: true, grid: { color: '#eee6e0' } } } });
+
+  const ancaman = teratas(hitung(data.filter(r => r.kategori === 'Aktivitas Manusia'), r => r.subkategori), 8);
+  gambar('gAncaman', 'bar', ancaman.map(a => a[0]), [{ data: ancaman.map(a => a[1]), backgroundColor: PI.orange, borderRadius: 3 }], horizontal);
+
+  const spesies = teratas(hitung(data, r => r.spesies_satwa && r.spesies_satwa.split(' - ')[0]), 10);
+  gambar('gSpesies', 'bar', spesies.map(s => s[0]), [{ data: spesies.map(s => s[1]), backgroundColor: PI.teal, borderRadius: 3 }], horizontal);
+
+  const tim = teratas(hitung(data, r => r.tim), 10);
+  gambar('gTim', 'bar', tim.map(t => t[0]), [{ data: tim.map(t => t[1]), backgroundColor: PI.yellow, borderRadius: 3 }], horizontal);
+}
+
+function isiSelect(el, nilai) { nilai.forEach(v => el.add(new Option(v, v))); }
+// Pilihan bertingkat: mitra -> kawasan -> tim. Pilihan lama dipertahankan bila masih ada.
+function isiUlang(sel, nilai) {
+  const lama = sel.value;
+  sel.length = 1; isiSelect(sel, nilai);
+  sel.value = [...sel.options].some(o => o.value === lama) ? lama : '';
+}
+function isiKawasan() {
+  const mt = $('mitra').value;
+  isiUlang($('kawasan'), unik(semua.filter(r => !mt || r.mitra === mt).map(r => r.kawasan)));
+}
+function isiTim() {
+  const mt = $('mitra').value, kw = $('kawasan').value;
+  isiUlang($('tim'), unik(semua.filter(r => (!mt || r.mitra === mt) && (!kw || r.kawasan === kw)).map(r => r.tim)));
+}
+function isiSub() {
+  const kat = $('kategori').value, sel = $('sub');
+  sel.length = 1;
+  isiSelect(sel, unik(semua.filter(r => !kat || r.kategori === kat).map(r => r.subkategori)));
+}
+
+function legenda() {
+  // Warna = kategori, ikon = jenis temuan.
+  const warna = Object.entries(WARNA_KAT).map(([k, w]) => `<div>${svgIkon('titik', w, false, 22)}${k}</div>`).join('');
+  const ikon = [...JENIS.map(([, g, nama]) => [g, nama]), ['daun', 'Tumbuhan'], ['rumah', 'Fitur / sarana']]
+    .map(([g, nama]) => `<div>${svgIkon(g, '#4a5a5f', false, 22)}${nama}</div>`).join('');
+  $('legenda').innerHTML = `<b style="font-size:12px;color:var(--muted)">Warna = kategori</b>${warna}
+    <b style="font-size:12px;color:var(--muted);margin-top:6px">Ikon = jenis temuan</b>${ikon}
+    <div>${svgIkon('lain', '#4a5a5f', true, 22)}Lingkar kuning = pelanggaran</div>`;
+}
+
+(async () => {
+  try { await muat(); }
+  catch (e) { $('status').textContent = 'Gagal memuat data: ' + e.message; return; }
+  $('status').textContent = `${fmt(semua.length)} temuan tercatat. Klik ikon untuk detail.`;
+  const tahun = unik(semua.map(r => r.tahun));
+  isiSelect($('dari'), tahun); isiSelect($('sampai'), tahun);
+  $('sampai').value = tahun[tahun.length - 1];
+  isiSelect($('mitra'), unik(semua.map(r => r.mitra)));
+  isiKawasan();
+  isiTim();
+  isiSelect($('kategori'), unik(semua.map(r => r.kategori)));
+  isiSub(); legenda();
+  NAMA_BULAN.forEach((b, i) => $('bulan').add(new Option(b, i + 1)));
+  ['dari', 'sampai', 'bulan', 'tim', 'sub', 'langgar', 'erSkala'].forEach(id => $(id).addEventListener('change', terapkan));
+  $('mitra').addEventListener('change', () => { isiKawasan(); isiTim(); terapkan(); fokus(); });
+  $('kawasan').addEventListener('change', () => {
+    isiTim(); terapkan(); fokus();
+  });
+  $('kategori').addEventListener('change', () => { isiSub(); terapkan(); });
+  $('reset').addEventListener('click', () => {
+    $('dari').value = tahun[0]; $('sampai').value = tahun[tahun.length - 1]; $('bulan').value = '';
+    $('mitra').value = ''; isiKawasan(); $('kawasan').value = ''; isiTim(); $('kategori').value = ''; isiSub(); $('langgar').checked = false; terapkan(); fokus();
+  });
+  terapkan();
+  fokus();
+})();
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script src="impor.js?v=20261116c"></script>
+<script src="kelola.js?v=20261116c"></script>
+<script>$('btnKelola').addEventListener('click', () => Kelola.buka());</script>
+</body>
+</html>
