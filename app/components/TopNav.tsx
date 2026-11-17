@@ -17,7 +17,6 @@ type Section =
   | "partners"
   | "publications"
   | "directory"
-  | "smart-patrol"
   | "event-operations"
   | "portal-review";
 
@@ -37,12 +36,12 @@ function sectionForPath(pathname: string): Section {
     return "partners";
   }
 
-  if (pathname === "/monitoring") {
+  // Hub Monitoring dan semua tool di bawahnya (Smart Patrol, Peta Mitra Pesisir, Data Source MEL).
+  if (
+    pathname === "/monitoring" ||
+    pathname.startsWith("/monitoring/")
+  ) {
     return "monitoring";
-  }
-
-  if (pathname === "/smart-patrol") {
-    return "smart-patrol";
   }
 
   if (pathname === "/event-operations") {
@@ -87,9 +86,6 @@ export default function TopNav() {
   const directoryRef =
     useRef<HTMLButtonElement | null>(null);
 
-  const smartPatrolRef =
-    useRef<HTMLButtonElement | null>(null);
-
   const eventOperationsRef =
     useRef<HTMLButtonElement | null>(null);
 
@@ -131,10 +127,6 @@ export default function TopNav() {
 
     if (section === "directory") {
       target = directoryRef.current;
-    }
-
-    if (section === "smart-patrol") {
-      target = smartPatrolRef.current;
     }
 
     if (section === "event-operations") {
@@ -372,14 +364,6 @@ export default function TopNav() {
   }
 
   /*
-   * Smart Patrol
-   */
-  function goToSmartPatrol() {
-    setActiveSection("smart-patrol");
-    router.push("/smart-patrol");
-  }
-
-  /*
    * Event Operations
    */
   function goToEventOperations() {
@@ -523,20 +507,6 @@ export default function TopNav() {
             }`}
           >
             Directory
-          </button>
-
-          {/* Smart Patrol */}
-          <button
-            ref={smartPatrolRef}
-            type="button"
-            onClick={goToSmartPatrol}
-            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
-              activeSection === "smart-patrol"
-                ? "text-white"
-                : "text-white/60 hover:text-white"
-            }`}
-          >
-            Smart Patrol
           </button>
 
           {/* Event Operations */}

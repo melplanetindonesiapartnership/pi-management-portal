@@ -1,20 +1,20 @@
-import type { Metadata } from "next";
-import TopNav from "../components/TopNav";
+import Link from "next/link";
+import TopNav from "./TopNav";
 
-export const metadata: Metadata = {
-  title: "Smart Patrol · Planet Indonesia",
-};
-
-// Peta Smart Patrol adalah aplikasi statis (Leaflet + Supabase) di public/smart-patrol/.
-// Dimuat lewat iframe dari origin yang sama supaya panel Kelola Data dan filter tetap jalan apa adanya.
-// Peta memenuhi layar; TopNav tersembunyi dan turun saat kursor ke tepi atas
-// (atau saat tab "Menu" difokus/diketuk di layar sentuh).
-export default function SmartPatrolPage() {
+// Halaman tool statis (public/) yang memenuhi layar lewat iframe dari origin yang sama.
+// TopNav tersembunyi dan turun saat kursor ke tepi atas (atau saat tab "Menu" difokus/diketuk di layar sentuh).
+export default function FullscreenEmbed({
+  src,
+  title,
+}: {
+  src: string;
+  title: string;
+}) {
   return (
     <main className="relative h-screen overflow-hidden bg-[#F7F0EC] text-[#004B5C]">
       <iframe
-        src="/smart-patrol/index.html"
-        title="Peta Smart Patrol Yayasan Planet Indonesia"
+        src={src}
+        title={title}
         className="absolute inset-0 h-full w-full border-0"
         allow="fullscreen"
       />
@@ -33,6 +33,14 @@ export default function SmartPatrolPage() {
           Menu
         </button>
       </div>
+
+      {/* Tengah bawah: sudut kiri/kanan bawah dipakai legenda, skala, dan atribusi peta. */}
+      <Link
+        href="/monitoring"
+        className="absolute bottom-3 left-1/2 z-40 -translate-x-1/2 rounded-full bg-[#004B5C]/90 px-4 py-2 text-xs font-semibold text-white shadow-md transition hover:bg-[#004B5C] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FFB432]"
+      >
+        ← Monitoring
+      </Link>
     </main>
   );
 }
