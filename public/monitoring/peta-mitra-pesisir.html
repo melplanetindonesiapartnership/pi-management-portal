@@ -90,6 +90,10 @@
   .legend{background:var(--paper);padding:8px 10px;border-radius:6px;font:12.5px/1.7 "Instrument Sans",sans-serif;box-shadow:0 1px 4px #0003;color:var(--ink)}
   .sw{display:inline-block;width:12px;height:12px;border-radius:2px;margin-right:6px;vertical-align:-1px}
   .leaflet-tooltip.lbl{background:var(--teal);color:#fff;border:0;font:600 12px "Instrument Sans",sans-serif}
+  /* nama desa: teks hitam saja, tanpa kotak/latar; halo putih tipis agar terbaca di atas zona */
+  .leaflet-tooltip.desa{background:none;border:0;box-shadow:none;padding:0;color:#000;font:700 12px "Instrument Sans",sans-serif;text-shadow:0 0 2px #fff,0 0 2px #fff}
+  .leaflet-tooltip.desa::before{display:none}
+  .hide-desa .leaflet-tooltip.desa{display:none}
   /* dialog Model Inti */
   dialog{border:0;border-radius:10px;padding:0;max-width:min(1000px,94vw);width:100%;background:var(--paper);color:var(--ink)}
   dialog::backdrop{background:#0b2a3366}
@@ -150,6 +154,9 @@ const fmt1 = n => n.toLocaleString('id-ID',{maximumFractionDigits:1});
 // ---------- peta (satu peta, layer dikelompokkan per mitra) ----------
 const map = L.map('map',{zoomSnap:.25});
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'&copy; OpenStreetMap, BIG, GMW'}).addTo(map);
+// label desa hanya saat zoom dekat, supaya tampilan seluruh Indonesia tidak penuh tulisan
+const toggleLabels = () => map.getContainer().classList.toggle('hide-desa', map.getZoom() < 10);
+map.on('zoomend', toggleLabels);
 const groups = {}, byKey = {};
 ORGS.forEach(org => {
   const of = fc => ({type:'FeatureCollection', features: fc.features.filter(f => f.properties.org === org && f.geometry)});
@@ -158,7 +165,7 @@ ORGS.forEach(org => {
     onEachFeature: (f, l) => { const p = f.properties; (byKey[org+'|'+p.nama] = byKey[org+'|'+p.nama] || []).push(l);
       l.bindPopup(`<b>${esc(p.nama)}</b> · ${org}<br>Jalur ${p.jalur} (${p.jarak})<br>${fmt(p.luas_ha)} ha` + (p.klaim_ha ? `<br>Klaim proposal: ${fmt(p.klaim_ha)} ha` : '')); }});
   const adm = L.geoJSON(of(ADMIN), {style: {color: C.adm, weight: 1.4, fill: false, dashArray: '4 3'},
-    onEachFeature: (f, l) => l.bindTooltip(esc(f.properties.nama), {className: 'lbl'})});
+    onEachFeature: (f, l) => l.bindTooltip(esc(f.properties.nama), {permanent: true, direction: 'center', className: 'desa'})});
   const mg = L.geoJSON(of(MANGROVE), {style: {color: '#1B5E20', weight: .5, fillColor: C.mg, fillOpacity: .9},
     onEachFeature: (f, l) => { const p = f.properties; byKey[org+'|mg|'+p.nama] = [l];
       l.bindPopup(`<b>Mangrove ${esc(p.nama)}</b> · ${org}<br>${fmt1(p.luas_ha)} ha`); }});
@@ -248,6 +255,7 @@ function select(org){
   ORGS.forEach(o => (org === 'Semua' || o === org) ? groups[o].addTo(map) : map.removeLayer(groups[o]));
   const shown = org === 'Semua' ? ORGS.map(o => groups[o]) : [groups[org]];
   map.fitBounds(L.featureGroup(shown).getBounds(), {padding: [24, 24]});
+  toggleLabels();
   org === 'Semua' ? renderAll() : renderOrg(org);
   panel.scrollTop = 0;
   try { history.replaceState(null, '', '#' + org); } catch (e) {}
