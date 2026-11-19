@@ -40,6 +40,16 @@ const monitoringTools: MonitoringTool[] = [
     image: "/monitoring/thumbs/peta-mitra-pesisir.png",
   },
   {
+    href: "/monitoring/mitra-mangrove-kaltara",
+    label: "Peta Wilayah Kelola",
+    status: "Indikatif",
+    title: "Mitra Mangrove Kaltara Program Weaverly",
+    description:
+      "Luas desa dan luas mangrove dari MVI 2025 di 18 desa Nunukan dan Tana Tidung, dibedakan antara mitra Pionir dan Green of Borneo.",
+    sources: ["BIG", "MVI 2025", "2 mitra"],
+    image: "/monitoring/thumbs/mitra-mangrove-kaltara.png",
+  },
+  {
     href: "/monitoring/data-source-mel",
     label: "Dashboard",
     status: "Live",
