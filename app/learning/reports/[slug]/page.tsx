@@ -39,6 +39,16 @@ const reports: ReportConfig[] = [
       "Publikasi hasil pelatihan MEL dan SMART Patrol Mitra YPI 2026 dalam format web portrait.",
     htmlPath: "/learning-reports/pi-mel-smart-patrol-2026.html",
   },
+
+  {
+    slug: "btor-pship009",
+    title:
+      "BTOR PSHIP009: Logframe, Protokol Komunikasi, dan RTL YPI bersama Yayasan Pionir dan Green of Borneo",
+    category: "Activity Report",
+    description:
+      "Laporan kegiatan penyusunan logframe, protokol komunikasi, dan rencana tindak lanjut Hibah Waverly Street Foundation di Tarakan, 4–5 November 2026.",
+    htmlPath: "/learning-reports/btor-pship009.html",
+  },
 ];
 
 export default function LearningReportPage() {

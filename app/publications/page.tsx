@@ -24,6 +24,22 @@ type Publication = {
 
 const publications: Publication[] = [
   {
+    id: 5,
+    title:
+      "BTOR PSHIP009: Logframe, Protokol Komunikasi, dan RTL bersama Yayasan Pionir dan Green of Borneo",
+    source: "YPI",
+    partner: "",
+    year: 2026,
+    category: "Activity Report",
+    topic: "Mangrove",
+    description:
+      "Laporan kegiatan penyusunan logframe, protokol komunikasi, dan rencana tindak lanjut Tahun 1 Hibah Waverly Street Foundation di Tarakan, Kalimantan Utara, 4–5 November 2026.",
+    url: "/learning/reports/btor-pship009",
+    local: true,
+    image: "/learning-reports/btor-pship009-cover.jpg",
+  },
+
+  {
     id: 1,
     title:
       "Publikasi Hasil Pelatihan MEL dan SMART Patrol Mitra YPI 2026",
@@ -105,6 +121,7 @@ const categories = [
   "Learning Publication",
   "Case Study",
   "Annual Report",
+  "Activity Report",
   "Journal / Article",
   "Publication",
 ];

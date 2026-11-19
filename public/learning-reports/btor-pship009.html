@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="BTOR PSHIP009: penyusunan logframe, protokol komunikasi, dan rencana tindak lanjut YPI bersama Yayasan Pionir dan Perkumpulan Green of Borneo, Hibah Waverly Street Foundation.">
+<title>BTOR PSHIP009 · Logframe, Protokol Komunikasi, dan RTL</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--teal:#004B5C;--teal-tint:#DDE9EB;--burgundy:#730A2D;--yellow:#FFB432;--yellow-tint:#FDEBCB;--off:#F7F0EC;--ink:#1A1A1A;--muted:#4F6670;--line:rgba(0,75,92,.14);--a:"btor-pship009/"}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--off);color:var(--ink);font-family:"Instrument Sans","Open Sans","Segoe UI",Arial,sans-serif;font-size:16px;line-height:1.6}
+img{max-width:100%;display:block}
+a{color:var(--teal)}
+.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+.hero{position:relative;color:#fff;background:var(--teal) url("btor-pship009/bg-teal-03.jpg") center/cover;overflow:hidden}
+.hero::after{content:"";position:absolute;top:0;right:0;bottom:0;width:72px;background:url("btor-pship009/band-yellow-03.png") repeat-y center/72px auto}
+.hero .wrap{position:relative;z-index:1;padding-top:56px;padding-bottom:72px;padding-right:110px}
+.hero .logo{width:210px}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--burgundy);margin:0 0 6px}
+.hero .kicker{color:var(--yellow);margin-top:64px}
+.hero h1{font-size:clamp(32px,5vw,54px);line-height:1.08;letter-spacing:-.02em;margin:10px 0 18px;max-width:900px}
+.hero .lead{font-size:clamp(17px,2vw,20px);color:var(--off);max-width:760px;margin:0 0 26px}
+.hero .meta{display:flex;flex-wrap:wrap;gap:8px 22px;font-size:15px}
+.hero .meta span::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--yellow);margin-right:8px;vertical-align:middle}
+.btn{display:inline-flex;align-items:center;gap:8px;margin-top:30px;padding:11px 18px;border-radius:999px;background:var(--yellow);color:var(--teal);font-weight:700;font-size:14px;text-decoration:none}
+.btn:hover{background:#ffc35a}
+.btn:focus-visible{outline:3px solid #fff;outline-offset:3px}
+
+/* Sticky TOC */
+.toc{position:sticky;top:0;z-index:20;background:rgba(247,240,236,.95);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px;scrollbar-width:none}
+.toc a{flex:none;padding:7px 13px;border-radius:999px;font-size:13px;font-weight:600;text-decoration:none;color:var(--teal);border:1px solid var(--line);background:#fff}
+.toc a:hover{background:var(--teal);color:#fff}
+
+/* Sections */
+section.s{position:relative;padding:72px 0}
+section.s::before{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;background:url("btor-pship009/band-teal-03.png") repeat-y center/22px auto;opacity:.9}
+h2{font-size:clamp(26px,3.4vw,36px);line-height:1.15;letter-spacing:-.015em;color:var(--teal);margin:0 0 28px}
+h3{color:var(--teal);margin:0 0 6px;font-size:19px;line-height:1.3}
+.label{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--burgundy);margin:0 0 4px}
+.grid{display:grid;gap:18px}
+.g4{grid-template-columns:repeat(4,1fr)}
+.g3{grid-template-columns:repeat(3,1fr)}
+.g2{grid-template-columns:repeat(2,1fr)}
+.card{background:#fff;border-radius:14px;padding:22px}
+.card.dark{background:var(--teal);color:#fff}
+.card.dark h3,.card.dark .label{color:var(--yellow)}
+.card.tint{background:var(--teal-tint)}
+.note{background:var(--yellow-tint);border-radius:14px;padding:16px 20px;font-size:15px}
+.note b{color:var(--burgundy)}
+.stat .n{font-size:44px;font-weight:700;line-height:1;color:var(--teal);letter-spacing:-.02em}
+.stat .u{font-weight:700;color:var(--burgundy);margin:8px 0 4px}
+.stat p{margin:0;font-size:14px;color:var(--muted)}
+.facts{margin-top:18px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 28px}
+.facts div p{margin:0}
+ul.clean{margin:0;padding-left:20px}
+ul.clean li{margin-bottom:10px}
+.num{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;background:var(--teal);color:#fff;font-weight:700;flex:none}
+.num.burg{background:var(--burgundy)}
+.row{display:flex;gap:14px;align-items:flex-start}
+.two{display:grid;grid-template-columns:1.45fr 1fr;gap:28px;align-items:start}
+.small{font-size:14px;color:var(--muted)}
+
+/* Photo band */
+figure.photo{margin:0;position:relative}
+figure.photo img{width:100%;height:min(62vh,620px);object-fit:cover}
+figure.photo figcaption{position:absolute;left:24px;bottom:18px;max-width:min(560px,calc(100% - 48px));background:rgba(0,75,92,.88);color:#fff;font-size:14px;padding:9px 14px;border-radius:10px}
+
+/* Section divider */
+.divider{background:var(--teal);color:#fff;padding:84px 0;position:relative}
+.divider::before{content:"";position:absolute;left:0;top:0;bottom:0;width:60px;background:url("btor-pship009/band-yellow-03.png") repeat-y center/60px auto}
+.divider .kicker{color:var(--yellow)}
+.divider h2{color:#fff;font-size:clamp(34px,5vw,52px);margin-bottom:12px}
+.divider p{color:var(--off);max-width:680px;margin:0;font-size:18px}
+
+/* Flow + timeline */
+.flow{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:12px;align-items:stretch}
+.arrow{align-self:center;color:var(--burgundy);font-size:28px;font-weight:700}
+.tl{position:relative;display:grid;grid-template-columns:repeat(4,1fr);margin-top:34px;text-align:center}
+.tl::before{content:"";position:absolute;left:12.5%;right:12.5%;top:44px;height:2px;background:var(--teal)}
+.tl .dot{width:22px;height:22px;border-radius:50%;background:var(--yellow);border:2px solid var(--teal);margin:10px auto;position:relative}
+.tl .q{font-size:13px;color:var(--muted)}
+.tl .m{font-weight:700;color:var(--teal);font-size:17px}
+
+/* Gantt */
+.gantt{background:#fff;border-radius:14px;padding:18px 18px 10px;overflow-x:auto}
+.gantt table{border-collapse:collapse;width:100%;min-width:860px;font-size:13px}
+.gantt th{font-size:12px;color:var(--teal);font-weight:700;padding:4px 0;text-align:center}
+.gantt th.y{color:var(--burgundy)}
+.gantt td{border-bottom:1px solid var(--line);padding:0;height:46px}
+.gantt td.act{padding:6px 12px 6px 0;width:300px}
+.gantt td.act b{display:block;color:var(--teal);font-size:13px;line-height:1.3}
+.gantt td.act span{font-size:12px;color:var(--muted)}
+.gantt td.m:nth-child(even){background:var(--off)}
+.bar{height:20px;background:var(--teal);border-radius:6px}
+.bar.mon{background:var(--teal-tint);border:1px solid var(--teal);position:relative}
+.bar.l{border-top-right-radius:0;border-bottom-right-radius:0;margin-left:3px}
+.bar.r{border-top-left-radius:0;border-bottom-left-radius:0;margin-right:3px}
+.bar.mid{border-radius:0}
+.bar.one{margin:0 3px}
+.rv{position:absolute;left:50%;top:50%;width:13px;height:13px;margin:-6.5px 0 0 -6.5px;border-radius:50%;background:var(--yellow);border:1px solid var(--teal)}
+.legend{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--teal);margin-bottom:10px}
+.legend i{width:13px;height:13px;border-radius:50%;background:var(--yellow);border:1px solid var(--teal);display:inline-block}
+
+/* People */
+.people p{margin:0 0 12px}
+.people b{display:block}
+.people span{font-size:14px;color:var(--teal)}
+.card.dark.people span{color:var(--off)}
+section.s .wrap{padding-left:48px}
+[id]{scroll-margin-top:64px}
+
+/* Days */
+.day .d{font-size:22px;font-weight:700;color:var(--teal)}
+.day .dt{font-weight:700;color:var(--burgundy);font-size:14px;margin-bottom:8px}
+.day p{margin:0;font-size:15px}
+
+/* Footer */
+.end{background:var(--teal) url("btor-pship009/bg-teal-03.jpg") center/cover;color:#fff;padding:80px 0;position:relative}
+.end .kicker{color:var(--yellow)}
+.end h2{color:#fff;font-size:clamp(30px,4.4vw,46px)}
+.end p{color:var(--off);max-width:760px}
+.end .logo{width:190px;margin-bottom:40px}
+footer.f{padding:18px 0;font-size:13px;color:var(--muted);text-align:center}
+
+@media (max-width:900px){
+  .g4{grid-template-columns:repeat(2,1fr)}
+  .g3,.two{grid-template-columns:1fr}
+  .flow{grid-template-columns:1fr}
+  .arrow{transform:rotate(90deg);justify-self:center}
+}
+@media (max-width:560px){
+  .wrap{padding:0 16px}
+  .g4,.g2{grid-template-columns:1fr}
+  .hero .wrap{padding-right:70px}
+  .hero::after{width:44px;background-size:44px auto}
+  section.s{padding:56px 0}
+  section.s .wrap{padding-left:34px}
+  .tl{grid-template-columns:repeat(2,1fr);row-gap:24px}
+  .tl::before{display:none}
+}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <img class="logo" src="btor-pship009/logo-white.png" alt="Yayasan Planet Indonesia">
+    <p class="kicker">Back to Office Report · PSHIP009</p>
+    <h1>Penyusunan Logframe, Protokol Komunikasi, dan Rencana Tindak Lanjut</h1>
+    <p class="lead">YPI bersama Yayasan Pionir dan Perkumpulan Green of Borneo · Hibah Waverly Street Foundation 2026–2029</p>
+    <div class="meta">
+      <span>Kota Tarakan, Kalimantan Utara</span>
+      <span>4–5 November 2026</span>
+      <span>Tim Penskalaan dan Kemitraan YPI</span>
+    </div>
+    <a class="btn" href="btor-pship009/BTOR_PSHIP009_Logframe_Protokol_RTL.pptx" download>↓ Unduh presentasi (PPTX)</a>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Daftar isi">
+  <div class="wrap">
+    <a href="#ringkasan">Ringkasan</a>
+    <a href="#latar">Latar belakang</a>
+    <a href="#tujuan">Tujuan</a>
+    <a href="#hasil">Hasil</a>
+    <a href="#rtl">Jadwal RTL</a>
+    <a href="#peserta">Peserta</a>
+    <a href="#jadwal">Realisasi jadwal</a>
+    <a href="#tindak-lanjut">Tindak lanjut</a>
+  </div>
+</nav>
+
+<figure class="photo">
+  <img src="btor-pship009/foto-diskusi-1.jpg" alt="Peserta dari YPI, Yayasan Pionir, dan Green of Borneo berdiskusi di ruang pertemuan dengan laptop terbuka" loading="lazy">
+  <figcaption>Sesi kerja bersama di Tarakan, 4 November 2026</figcaption>
+</figure>
+
+<section class="s" id="ringkasan">
+  <div class="wrap">
+    <p class="kicker">Ringkasan kegiatan</p>
+    <h2>Tiga lembaga, satu rencana kerja bersama</h2>
+    <div class="grid g4">
+      <div class="card stat"><div class="n">3</div><div class="u">lembaga mitra</div><p>YPI, Yayasan Pionir, dan Green of Borneo (GoB)</p></div>
+      <div class="card stat"><div class="n">±93.566</div><div class="u">hektare</div><p>Luas kawasan indikatif di Nunukan dan Tana Tidung</p></div>
+      <div class="card stat"><div class="n">12</div><div class="u">desa calon</div><p>Akan dinilai sebelum desa pelaksanaan ditetapkan</p></div>
+      <div class="card stat"><div class="n">9</div><div class="u">peserta</div><p>2 fasilitator YPI, 4 Pionir, 3 GoB</p></div>
+    </div>
+    <div class="card tint facts">
+      <div><p class="label">Nomor TOR</p><p>PSHIP009</p></div>
+      <div><p class="label">Penanggung jawab</p><p>Pramudya Lazuardi</p></div>
+      <div><p class="label">Lokasi</p><p>Kota Tarakan, Kalimantan Utara</p></div>
+      <div><p class="label">Waktu</p><p>4–5 November 2026 (perjalanan 3 dan 6 November)</p></div>
+      <div><p class="label">Kerangka hibah</p><p>Waverly Street Foundation, 9 Nov 2026 – 31 Okt 2029</p></div>
+    </div>
+  </div>
+</section>
+
+<figure class="photo">
+  <img src="btor-pship009/peta-mvi-mangrove.jpg" alt="Peta MVI 2025 Mangrove Kaltara yang menampilkan wilayah pendampingan Pionir (13 desa) dan Green of Borneo (6 desa) di Nunukan dan Tana Tidung" loading="lazy">
+  <figcaption>Peta MVI 2025: wilayah pendampingan Pionir dan Green of Borneo</figcaption>
+</figure>
+
+<section class="s" id="latar">
+  <div class="wrap">
+    <p class="kicker">Latar belakang</p>
+    <h2>Rencana tiga lembaga perlu terhubung dan terukur</h2>
+    <div class="two">
+      <ul class="clean">
+        <li>Hibah WSF mendukung pengelolaan mangrove berbasis masyarakat di Kabupaten Nunukan dan Tana Tidung, Kalimantan Utara.</li>
+        <li>Lingkup program: hak dan akses kelola, tata kelola kelembagaan desa, pemantauan dan perlindungan mangrove, serta penghidupan masyarakat pesisir.</li>
+        <li>Cakupan desa, wilayah unik, kondisi awal, dan pembagian kontribusi tiap lembaga masih perlu diselaraskan.</li>
+        <li>Luas kawasan dan jumlah anggota masyarakat yang terlibat tidak boleh dihitung lebih dari sekali.</li>
+      </ul>
+      <div class="card dark">
+        <p class="label">Istilah kunci</p>
+        <h3>Logframe</h3>
+        <p>Kerangka hasil, indikator, target tahunan, dan cara membuktikan capaian.</p>
+        <h3>MoV (Means of Verification)</h3>
+        <p>Dokumen atau data yang membuktikan capaian.</p>
+        <h3>RTL (Rencana Tindak Lanjut)</h3>
+        <p style="margin:0">Kebutuhan koordinasi, pembelajaran, dan penguatan kelembagaan, bukan sekadar daftar kegiatan lapangan.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="tujuan" style="padding-top:0">
+  <div class="wrap">
+    <p class="kicker">Tujuan dan hasil yang diharapkan</p>
+    <h2>Tiga dokumen kerja sebagai dasar kemitraan</h2>
+    <div class="grid g3">
+      <div class="card">
+        <div class="row"><span class="num">1</span><h3 style="align-self:center">Logframe</h3></div>
+        <p class="label" style="margin-top:18px">Tujuan</p>
+        <p>Menyusun dan menyepakati logframe bersama serta logframe tiap lembaga untuk 2026–2029.</p>
+        <p class="label">Hasil yang diharapkan</p>
+        <p style="margin:0">Hasil, indikator, target tahunan, data awal, metode pemantauan, MoV, dan pembagian tanggung jawab.</p>
+      </div>
+      <div class="card">
+        <div class="row"><span class="num">2</span><h3 style="align-self:center">Protokol komunikasi</h3></div>
+        <p class="label" style="margin-top:18px">Tujuan</p>
+        <p>Mengatur jalur koordinasi, validasi data, pelaporan, informasi sensitif, dan persetujuan publikasi.</p>
+        <p class="label">Hasil yang diharapkan</p>
+        <p style="margin:0">Penanggung jawab, jadwal koordinasi, pemeriksaan data dan laporan, serta alur persetujuan publikasi.</p>
+      </div>
+      <div class="card">
+        <div class="row"><span class="num">3</span><h3 style="align-self:center">RTL Tahun 1</h3></div>
+        <p class="label" style="margin-top:18px">Tujuan</p>
+        <p>Menyusun langkah penguatan kemitraan sesuai kebutuhan teknis, MEL, dan kelembagaan tiap mitra.</p>
+        <p class="label">Hasil yang diharapkan</p>
+        <p style="margin:0">Kegiatan prioritas Nov 2026 – Okt 2027 dengan penanggung jawab, jadwal, dukungan, dan bukti selesai.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider" id="hasil">
+  <div class="wrap" style="padding-left:110px">
+    <p class="kicker">Bagian 2</p>
+    <h2>Hasil yang dicapai</h2>
+    <p>Logframe dan anggaran mitra, mekanisme koordinasi awal, dan rencana tindak lanjut Tahun 1.</p>
+  </div>
+</div>
+
+<figure class="photo">
+  <img src="btor-pship009/foto-diskusi-2.jpg" alt="Fasilitator berdiri di depan layar proyektor sementara peserta bekerja dengan laptop" loading="lazy">
+  <figcaption>Pembahasan logframe program dan tiap lembaga</figcaption>
+</figure>
+
+<section class="s">
+  <div class="wrap">
+    <p class="kicker">Hasil 1</p>
+    <h2>Logframe dan anggaran tiap mitra tersusun</h2>
+    <div class="two">
+      <div>
+        <ul class="clean">
+          <li>Yayasan Pionir dan GoB menerjemahkan arah program bersama menjadi hasil, indikator, dan target sesuai peran masing-masing.</li>
+          <li>YPI kini dapat menilai kemajuan kedua mitra secara terpisah maupun sebagai satu program.</li>
+          <li>Bagi GoB, penyusunan anggaran sekaligus menjadi sesi pendampingan: gaji staf, uang harian, biaya perjalanan, satuan biaya, serta pencatatan dan pelaporan keuangan sederhana.</li>
+        </ul>
+        <div class="note" style="margin-top:18px"><b>Belum final:</b> angka capaian bersama, termasuk luas kawasan yang tidak tumpang tindih dan data awal, masih diperiksa pada dokumen gabungan.</div>
+      </div>
+      <div class="card dark">
+        <p class="label">MoV</p>
+        <ul class="clean">
+          <li>Logframe dan Rencana Kerja Yayasan Pionir</li>
+          <li>Logframe GoB</li>
+          <li>Logframe bersama WSF</li>
+          <li>Anggaran Yayasan Pionir</li>
+          <li style="margin:0">Anggaran GoB</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="s" style="padding-top:0">
+  <div class="wrap">
+    <p class="kicker">Hasil 2</p>
+    <h2>Mekanisme koordinasi awal disepakati</h2>
+    <div class="flow">
+      <div class="card"><h3>Yayasan Pionir &amp; GoB</h3><p style="margin:0">Memperbarui data perkembangan kegiatan dan MoV setiap bulan.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="card dark"><h3>YPI</h3><p style="margin:0">Mengonsolidasikan data untuk pemantauan program.</p></div>
+      <div class="arrow" aria-hidden="true">→</div>
+      <div class="card"><h3>Laporan donor</h3><p style="margin:0">Disusun YPI dari data gabungan ketiga lembaga.</p></div>
+    </div>
+    <p class="label" style="margin-top:40px">Peninjauan kemajuan bersama setiap tiga bulan</p>
+    <div class="tl">
+      <div><div class="q">Triwulan 1</div><div class="dot"></div><div class="m">Februari 2027</div></div>
+      <div><div class="q">Triwulan 2</div><div class="dot"></div><div class="m">Mei 2027</div></div>
+      <div><div class="q">Triwulan 3</div><div class="dot"></div><div class="m">Agustus 2027</div></div>
+      <div><div class="q">Triwulan 4</div><div class="dot"></div><div class="m">November 2027</div></div>
+    </div>
+    <p class="small" style="margin-top:22px"><i>MoV: RTL Bersama Y1</i></p>
+  </div>
+</section>
+
+<section class="s" style="padding-top:0">
+  <div class="wrap">
+    <p class="kicker">Hasil 3</p>
+    <h2>RTL Tahun 1: 12 kelompok pekerjaan bersama</h2>
+    <div class="grid g4">
+      <div class="card"><p class="label">Nov 2026 – Jan 2027</p><h3>Asesmen 12 desa calon</h3><p style="margin:0;font-size:15px">Metode disiapkan, lalu penilaian awal calon lokasi program.</p></div>
+      <div class="card"><p class="label">Feb – Mar 2027</p><h3>Penetapan desa</h3><p style="margin:0;font-size:15px">Hasil asesmen dibahas bersama pemerintah dan pihak terkait.</p></div>
+      <div class="card"><p class="label">Mar – Okt 2027</p><h3>Data awal</h3><p style="margin:0;font-size:15px">Sosial-ekonomi rumah tangga, tutupan dan karbon mangrove, perikanan, dan tata kelola lembaga lokal.</p></div>
+      <div class="card"><p class="label">Jun – Okt 2027</p><h3>Rencana kerja desa</h3><p style="margin:0;font-size:15px">Pelatihan MEL dan SMART Patrol bagi GoB, lalu rencana kerja per desa.</p></div>
+    </div>
+    <p style="color:var(--teal);margin:22px 0">Peran: YPI memimpin metode pengukuran dan pemeriksaan mutu data; mitra mendukung pengumpulan data lapangan; YPI memantau berkala dan menggabungkan laporan tahunan.</p>
+    <div class="note"><b>Keputusan terbuka:</b> 12 desa calon asesmen vs 6 desa di logframe sumber vs survei rumah tangga di 8 desa. Jumlah desa pelaksanaan dan cakupan survei dipastikan sebelum kegiatan lapangan; tenggat laporan tahunan donor menunggu konfirmasi perjanjian hibah.</div>
+  </div>
+</section>
+
+<figure class="photo">
+  <img src="btor-pship009/foto-papan-tulis.jpg" alt="Peserta menulis perhitungan luas kawasan di papan tulis" loading="lazy">
+  <figcaption>Menyelaraskan angka luas kawasan antar-lembaga</figcaption>
+</figure>
+
+<section class="s" id="rtl">
+  <div class="wrap">
+    <p class="kicker">Rencana tindak lanjut Tahun 1</p>
+    <h2>Jadwal kerja November 2026 – Desember 2027</h2>
+    <div class="gantt" id="gantt">
+      <div class="legend"><i></i> Review triwulanan bersama</div>
+    </div>
+  </div>
+</section>
+
+<figure class="photo">
+  <img src="btor-pship009/foto-diskusi-3.jpg" alt="Peserta dari tiga lembaga bekerja di meja pertemuan berbentuk U" loading="lazy">
+  <figcaption>Penyusunan anggaran dan rencana tindak lanjut, 5 November 2026</figcaption>
+</figure>
+
+<section class="s" id="peserta">
+  <div class="wrap">
+    <p class="kicker">Peserta dan fasilitator</p>
+    <h2>Sembilan orang dari tiga lembaga</h2>
+    <div class="grid g3">
+      <div class="card dark people">
+        <h3 style="margin-bottom:14px">YPI · Fasilitator</h3>
+        <p><b>Pramudya Lazuardi</b><span>Scaling &amp; Partnership Manager</span></p>
+        <p style="margin:0"><b>Dhyar Prayoga Rudianto</b><span>MEL Partnership Supervisor</span></p>
+      </div>
+      <div class="card people">
+        <h3 style="margin-bottom:14px">Yayasan Pionir</h3>
+        <p><b>Doni Tiaka</b><span>Direktur Utama</span></p>
+        <p><b>Dede Wahyudi</b><span>Program</span></p>
+        <p><b>Uria Ema Julia Ajan</b><span>Project Manager</span></p>
+        <p style="margin:0"><b>Noni Margawari Luhat</b><span>GIS</span></p>
+      </div>
+      <div class="card people">
+        <h3 style="margin-bottom:14px">Green of Borneo</h3>
+        <p><b>Kamirudin</b><span>Direktur</span></p>
+        <p><b>Masruni</b><span>Program Manager</span></p>
+        <p style="margin:0"><b>Sahari</b><span>MEL &amp; GIS</span></p>
+      </div>
+    </div>
+    <p class="small" style="margin-top:18px"><i>Nama peserta mitra merujuk pada daftar penerima pengganti HOK dan transportasi. Daftar hadir bertanda tangan perlu dilampirkan sebagai bukti kehadiran formal.</i></p>
+  </div>
+</section>
+
+<section class="s" id="jadwal" style="padding-top:0">
+  <div class="wrap">
+    <p class="kicker">Realisasi jadwal</p>
+    <h2>Dua hari kerja di Tarakan</h2>
+    <div class="grid g4">
+      <div class="card tint day"><div class="d">Selasa</div><div class="dt">3 Nov 2026</div><p>Perjalanan menuju Tarakan dan persiapan teknis pertemuan.</p></div>
+      <div class="card day"><div class="d">Rabu</div><div class="dt">4 Nov 2026</div><p>Pengantar pengukuran outcome, pembahasan logframe program dan tiap lembaga, serta mentoring perencanaan.</p></div>
+      <div class="card day"><div class="d">Kamis</div><div class="dt">5 Nov 2026</div><p>Lanjutan logframe, anggaran, dan RTL. Pendampingan GoB juga berlangsung di luar sesi formal.</p></div>
+      <div class="card tint day"><div class="d">Jumat</div><div class="dt">6 Nov 2026</div><p>Perjalanan kembali dari Tarakan.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="s" id="tindak-lanjut" style="padding-top:0">
+  <div class="wrap">
+    <p class="kicker">Catatan tindak lanjut</p>
+    <h2>Yang perlu dipastikan sebelum kegiatan lapangan</h2>
+    <div class="grid g2">
+      <div class="card row"><span class="num">1</span><div><h3>Finalisasi angka logframe gabungan</h3><p style="margin:0">Luas kawasan tanpa tumpang tindih dan data awal sebagai acuan final.</p></div></div>
+      <div class="card tint row"><span class="num">2</span><div><h3>Kepastian jumlah desa</h3><p style="margin:0">Selaraskan 12 desa calon, 6 desa logframe sumber, dan survei 8 desa.</p></div></div>
+      <div class="card row"><span class="num">3</span><div><h3>Tenggat laporan donor</h3><p style="margin:0">Konfirmasi tenggat laporan tahunan dari perjanjian hibah WSF.</p></div></div>
+      <div class="card tint row"><span class="num">4</span><div><h3>Pendampingan keuangan GoB</h3><p style="margin:0">Lanjutkan pendampingan standar biaya, pencatatan, dan laporan keuangan.</p></div></div>
+      <div class="card row"><span class="num">5</span><div><h3>Protokol komunikasi formal</h3><p style="margin:0">Lengkapi validasi data, informasi sensitif, dan persetujuan publikasi.</p></div></div>
+      <div class="card tint row"><span class="num">6</span><div><h3>Kelengkapan administrasi</h3><p style="margin:0">Lampirkan daftar hadir bertanda tangan dan arsip bukti keuangan.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<figure class="photo">
+  <img src="btor-pship009/foto-bersama.jpg" alt="Foto bersama peserta dari YPI, Yayasan Pionir, dan Green of Borneo di lobi hotel" loading="lazy">
+  <figcaption>Peserta dari YPI, Yayasan Pionir, dan Green of Borneo</figcaption>
+</figure>
+
+<section class="end">
+  <div class="wrap">
+    <img class="logo" src="btor-pship009/logo-white.png" alt="Yayasan Planet Indonesia">
+    <p class="kicker">Terima kasih</p>
+    <h2>Bekerja bersama mitra, bukan melalui mitra</h2>
+    <p>Lampiran: logframe dan anggaran tiap mitra, logframe bersama WSF, RTL Bersama Y1, dokumentasi foto, dan arsip bukti keuangan.</p>
+    <p>Kontak: Tim Penskalaan dan Kemitraan, Yayasan Planet Indonesia</p>
+    <a class="btn" href="btor-pship009/BTOR_PSHIP009_Logframe_Protokol_RTL.pptx" download>↓ Unduh presentasi (PPTX)</a>
+  </div>
+</section>
+<footer class="f">BTOR PSHIP009 · Hibah Waverly Street Foundation 2026–2029 · Yayasan Planet Indonesia</footer>
+
+<script>
+// Gantt RTL Tahun 1: indeks bulan 0 = Nov 2026 … 13 = Des 2027
+(function () {
+  var months = ["N","D","J","F","M","A","M","J","J","A","S","O","N","D"];
+  var rows = [
+    ["Orientasi dan pendampingan administrasi GoB","Gami; Masruni; Ardi",0,1],
+    ["Penyusunan instrumen asesmen desa","Dede/Uria; Masruni",0,0],
+    ["Asesmen calon desa","Dede/Uria; Masruni",0,2],
+    ["Lokakarya penetapan desa prioritas","Doni; Gami; Ardi",3,4],
+    ["Survei awal rumah tangga (HIS)","Dhyar; Dede/Uria; Masruni",4,6],
+    ["Pengukuran awal mangrove dan perikanan","Dhyar; Dede/Uria; Masruni",4,10],
+    ["Pelatihan MEL dan SMART Patrol bagi GoB","Dhyar; Masruni",7,7],
+    ["Penilaian tata kelola kelembagaan","Dhyar; Dede/Uria; Masruni",7,11],
+    ["Peta dan rencana kerja desa","Dede/Uria; Masruni; Doni/Gami",4,11],
+    ["Pemantauan kemajuan (bulanan + review)","Dhyar; Pramudya; Dede/Uria; Masruni",0,13,true],
+    ["Laporan tahun pertama","Pramudya; Dhyar; Doni; Gami",11,13]
+  ];
+  var reviews = [3,6,9,12];
+  var esc = function (s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); };
+  var h = '<table><thead><tr><th></th><th class="y" colspan="2">2026</th><th class="y" colspan="12">2027</th></tr><tr><th></th>';
+  months.forEach(function (m) { h += "<th>" + m + "</th>"; });
+  h += "</tr></thead><tbody>";
+  rows.forEach(function (r) {
+    h += '<tr><td class="act"><b>' + esc(r[0]) + "</b><span>" + esc(r[1]) + "</span></td>";
+    for (var i = 0; i < 14; i++) {
+      var inBar = i >= r[2] && i <= r[3], cls = "";
+      if (inBar) cls = r[2] === r[3] ? "one" : i === r[2] ? "l" : i === r[3] ? "r" : "mid";
+      var rv = r[4] && reviews.indexOf(i) >= 0 ? '<span class="rv" title="Review triwulanan"></span>' : "";
+      h += '<td class="m">' + (inBar ? '<div class="bar ' + cls + (r[4] ? " mon" : "") + '">' + rv + "</div>" : "") + "</td>";
+    }
+    h += "</tr>";
+  });
+  document.getElementById("gantt").insertAdjacentHTML("beforeend", h + "</tbody></table>");
+})();
+</script>
+</body>
+</html>
