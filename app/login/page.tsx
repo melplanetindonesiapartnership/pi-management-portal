@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { signIn } from "@/auth";
+import AutoSignIn from "./AutoSignIn";
 
 export const metadata: Metadata = {
   title: "Masuk · Planet Indonesia",
@@ -53,7 +54,9 @@ export default async function LoginPage({
                 ? "Akun ini tidak bisa masuk. Pilih akun dengan email @planetindonesia.org."
                 : "Login gagal. Coba lagi, atau hubungi tim MEL bila berulang."}
             </p>
-          ) : null}
+          ) : (
+            <AutoSignIn redirectTo={redirectTo} />
+          )}
 
           <form action={masuk} className="mt-6">
             <button
