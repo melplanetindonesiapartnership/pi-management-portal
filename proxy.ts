@@ -1,5 +1,5 @@
 // Semua halaman, API, dan tool statis di public/ wajib login akun YPI (lihat callback authorized di auth.ts).
-export { auth as default } from "./auth";
+export { auth as proxy } from "./auth";
 
 export const config = {
   // Dikecualikan: endpoint Auth.js, halaman login, aset build Next, dan gambar yang dipakai halaman login.
