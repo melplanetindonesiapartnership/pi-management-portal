@@ -14,6 +14,7 @@ type Section =
   | "sprints"
   | "monitoring"
   | "partners"
+  | "performance"
   | "publications"
   | "directory"
   | "event-operations"
@@ -33,6 +34,13 @@ function sectionForPath(pathname: string): Section {
 
   if (pathname === "/partners") {
     return "partners";
+  }
+
+  if (
+    pathname === "/performance" ||
+    pathname.startsWith("/performance/")
+  ) {
+    return "performance";
   }
 
   // Hub Monitoring dan semua tool di bawahnya (Smart Patrol, Peta Mitra Pesisir, Data Source MEL).
@@ -76,6 +84,9 @@ export default function TopNav() {
   const partnersRef =
     useRef<HTMLButtonElement | null>(null);
 
+  const performanceRef =
+    useRef<HTMLButtonElement | null>(null);
+
   const publicationsRef =
     useRef<HTMLButtonElement | null>(null);
 
@@ -111,6 +122,10 @@ export default function TopNav() {
 
     if (section === "partners") {
       target = partnersRef.current;
+    }
+
+    if (section === "performance") {
+      target = performanceRef.current;
     }
 
     if (section === "publications") {
@@ -221,6 +236,14 @@ export default function TopNav() {
   function goToPartners() {
     setActiveSection("partners");
     router.push("/partners");
+  }
+
+  /*
+   * Performance (satu tool untuk saat ini: Value for Money Mitra YPI)
+   */
+  function goToPerformance() {
+    setActiveSection("performance");
+    router.push("/performance/value-for-money");
   }
 
   /*
@@ -339,9 +362,18 @@ export default function TopNav() {
           </button>
 
           {/* Performance */}
-          <span className="relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold text-white/30">
+          <button
+            ref={performanceRef}
+            type="button"
+            onClick={goToPerformance}
+            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
+              activeSection === "performance"
+                ? "text-white"
+                : "text-white/60 hover:text-white"
+            }`}
+          >
             Performance
-          </span>
+          </button>
 
           {/* Publications */}
           <button
