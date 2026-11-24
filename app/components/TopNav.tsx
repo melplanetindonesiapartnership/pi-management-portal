@@ -11,7 +11,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { EVENT_OPERATIONS_URL } from "../lib/links";
 
 type Section =
-  | "overview"
   | "sprints"
   | "monitoring"
   | "partners"
@@ -55,7 +54,7 @@ function sectionForPath(pathname: string): Section {
     return "portal-review";
   }
 
-  return "overview";
+  return "sprints";
 }
 
 export default function TopNav() {
@@ -67,9 +66,6 @@ export default function TopNav() {
 
   const navRef =
     useRef<HTMLElement | null>(null);
-
-  const overviewRef =
-    useRef<HTMLButtonElement | null>(null);
 
   const sprintsRef =
     useRef<HTMLButtonElement | null>(null);
@@ -104,10 +100,6 @@ export default function TopNav() {
     }
 
     let target: HTMLButtonElement | null = null;
-
-    if (section === "overview") {
-      target = overviewRef.current;
-    }
 
     if (section === "sprints") {
       target = sprintsRef.current;
@@ -160,7 +152,6 @@ export default function TopNav() {
   /*
    * Determine active section from current URL.
    * Derived during render (not in an effect) to avoid cascading renders.
-   * On "/" the homepage scroll effect below picks Overview or Sprints.
    */
   const [prevPathname, setPrevPathname] =
     useState(pathname);
@@ -199,76 +190,10 @@ export default function TopNav() {
   }, [activeSection]);
 
   /*
-   * Homepage scroll behavior.
+   * Sprints (beranda)
    */
-  useEffect(() => {
-    if (pathname !== "/") {
-      return;
-    }
-
-    let ticking = false;
-
-    function updateActiveSection() {
-      const activeWork =
-        document.getElementById("active-work");
-
-      if (!activeWork) {
-        ticking = false;
-        return;
-      }
-
-      const activeWorkTop =
-        activeWork.getBoundingClientRect().top +
-        window.scrollY;
-
-      const trigger =
-        activeWorkTop - 115;
-
-      const nextSection: Section =
-        window.scrollY >= trigger
-          ? "sprints"
-          : "overview";
-
-      setActiveSection(nextSection);
-
-      ticking = false;
-    }
-
-    function handleScroll() {
-      if (ticking) {
-        return;
-      }
-
-      ticking = true;
-
-      window.requestAnimationFrame(
-        updateActiveSection
-      );
-    }
-
-    updateActiveSection();
-
-    window.addEventListener(
-      "scroll",
-      handleScroll,
-      {
-        passive: true,
-      }
-    );
-
-    return () => {
-      window.removeEventListener(
-        "scroll",
-        handleScroll
-      );
-    };
-  }, [pathname]);
-
-  /*
-   * Overview
-   */
-  function goToOverview() {
-    setActiveSection("overview");
+  function goToSprints() {
+    setActiveSection("sprints");
 
     if (pathname === "/") {
       window.scrollTo({
@@ -280,55 +205,6 @@ export default function TopNav() {
     }
 
     router.push("/");
-  }
-
-  /*
-   * Sprints
-   */
-  function goToSprints() {
-    setActiveSection("sprints");
-
-    if (pathname === "/") {
-      const activeWork =
-        document.getElementById("active-work");
-
-      if (!activeWork) {
-        return;
-      }
-
-      const target =
-        activeWork.getBoundingClientRect().top +
-        window.scrollY -
-        100;
-
-      window.scrollTo({
-        top: Math.max(target, 0),
-        behavior: "smooth",
-      });
-
-      return;
-    }
-
-    router.push("/");
-
-    setTimeout(() => {
-      const activeWork =
-        document.getElementById("active-work");
-
-      if (!activeWork) {
-        return;
-      }
-
-      const target =
-        activeWork.getBoundingClientRect().top +
-        window.scrollY -
-        100;
-
-      window.scrollTo({
-        top: Math.max(target, 0),
-        behavior: "smooth",
-      });
-    }, 300);
   }
 
   /*
@@ -415,21 +291,7 @@ export default function TopNav() {
             className="absolute bottom-1 left-0 top-1 rounded-full bg-[#2F8FA6] shadow-sm transition-all duration-300 ease-out"
           />
 
-          {/* Overview */}
-          <button
-            ref={overviewRef}
-            type="button"
-            onClick={goToOverview}
-            className={`relative z-10 whitespace-nowrap rounded-full px-4 py-2 text-xs font-semibold transition ${
-              activeSection === "overview"
-                ? "text-white"
-                : "text-white/60 hover:text-white"
-            }`}
-          >
-            Overview
-          </button>
-
-          {/* Sprints */}
+          {/* Sprints (beranda; dulu Overview + Sprints) */}
           <button
             ref={sprintsRef}
             type="button"
