@@ -35,8 +35,8 @@ const monitoringTools: MonitoringTool[] = [
     status: "Indikatif",
     title: "Peta Mitra Pesisir ORCA Program 2027–2029",
     description:
-      "Zona tangkap tradisional (Jalur I), batas desa, dan mangrove di lokasi KUL, YCMM, Bantaya, dan JAPESDA, dengan profil dan strategi Model Inti tiap mitra.",
-    sources: ["BIG", "Global Mangrove Watch", "4 mitra"],
+      "Zona tangkap tradisional (Jalur I), batas desa, dan mangrove di lokasi KUL, YCMM, Bantaya, JAPESDA, dan BICARA, dengan profil dan strategi Model Inti tiap mitra.",
+    sources: ["BIG", "Global Mangrove Watch", "5 mitra"],
     image: "/monitoring/thumbs/peta-mitra-pesisir.png",
   },
   {
